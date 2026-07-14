@@ -5,6 +5,11 @@
 # Frontend pages
 PROTOTYPE/
 
+# Maven / Java build
+target/
+*.jar
+*.class
+
 # OS
 .DS_Store
 Thumbs.db
