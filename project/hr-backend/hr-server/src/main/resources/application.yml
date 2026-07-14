@@ -1,0 +1,78 @@
+server:
+  port: 8080
+  address: 0.0.0.0
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  # Tomcat 访问日志 — 记录所有进入的连接请求
+  tomcat:
+    uri-encoding: UTF-8
+    accesslog:
+      enabled: true
+      directory: e:/PROTOTYPE/project/hr-backend/logs
+      prefix: access
+      suffix: .log
+      pattern: '%{yyyy-MM-dd HH:mm:ss.SSS}t %h "%r" %s %b %Dms'
+      file-date-format: .yyyy-MM-dd
+      rotate: true
+      rename-on-rotate: false
+      max-days: 30
+
+# ============================================
+# CORS 跨域配置 — 前端不在本机时需要修改为前端设备的 IP
+# 多个来源用逗号分隔，如 http://192.168.1.100:3000,http://192.168.1.101:3000
+# ============================================
+cors:
+  allowed-origins: "*"
+
+spring:
+  profiles:
+    active: dev
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/hr_system?useUnicode=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: root123
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: redis123
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 100MB
+
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+jwt:
+  secret: your-jwt-secret-key-change-in-production
+  expiration: 86400000
+
+minio:
+  endpoint: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin123
+  bucket: hr-files
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn

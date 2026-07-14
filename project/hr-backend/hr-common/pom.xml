@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.hr</groupId>
+        <artifactId>hr-backend</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>hr-common</artifactId>
+    <packaging>jar</packaging>
+    <name>hr-common</name>
+    <description>通用模块 — 公共实体、枚举、异常、工具类、统一返回体</description>
+
+    <dependencies>
+        <!-- MyBatis-Plus（PageResult 需要 IPage） -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+        </dependency>
+
+        <!-- Servlet API（ExcelUtils 导出需要 HttpServletResponse） -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- EasyExcel -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>easyexcel</artifactId>
+        </dependency>
+    </dependencies>
+</project>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.hr</groupId>
+        <artifactId>hr-backend</artifactId>
+        <version>1.0.0</version>
+    </parent>
+
+    <artifactId>hr-module-auth</artifactId>
+    <packaging>jar</packaging>
+    <name>hr-module-auth</name>
+    <description>认证模块 — 登录/登出/用户信息/菜单/密码修改</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.hr</groupId>
+            <artifactId>hr-framework</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.hr</groupId>
+            <artifactId>hr-module-system</artifactId>
+        </dependency>
+    </dependencies>
+</project>

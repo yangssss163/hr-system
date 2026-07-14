@@ -1,0 +1,5 @@
+com\hr\module\auth\service\AuthService.class
+com\hr\module\auth\service\impl\UserAuthorityProviderImpl.class
+com\hr\module\auth\dto\LoginDTO.class
+com\hr\module\auth\controller\AuthController.class
+com\hr\module\auth\service\impl\AuthServiceImpl.class
