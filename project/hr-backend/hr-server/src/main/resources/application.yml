@@ -1,6 +1,9 @@
 server:
   port: 8080
   address: 0.0.0.0
+  error:
+    whitelabel:
+      enabled: false
   servlet:
     encoding:
       charset: UTF-8
@@ -21,8 +24,7 @@ server:
       max-days: 30
 
 # ============================================
-# CORS 跨域配置 — 前端不在本机时需要修改为前端设备的 IP
-# 多个来源用逗号分隔，如 http://192.168.1.100:3000,http://192.168.1.101:3000
+# CORS 跨域配置 — 前后端一体部署，保持跨域兼容性（如 API 被外部调用时仍需要）
 # ============================================
 cors:
   allowed-origins: "*"
