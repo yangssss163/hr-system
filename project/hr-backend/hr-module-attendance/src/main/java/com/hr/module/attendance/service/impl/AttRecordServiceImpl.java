@@ -16,12 +16,16 @@ import org.springframework.util.StringUtils;
 
 import com.alibaba.excel.EasyExcel;
 import com.hr.module.attendance.dto.AttRecordImportDTO;
+import com.hr.module.attendance.helper.AttendanceEmployeeHelper;
+import com.hr.module.attendance.helper.AttendanceEmployeeHelper.EmployeeInfo;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +33,7 @@ import java.util.stream.Collectors;
 public class AttRecordServiceImpl implements AttRecordService {
 
     private final AttRecordMapper attRecordMapper;
+    private final AttendanceEmployeeHelper employeeHelper;
 
     @Override
     public PageResult<AttRecordVO> page(AttRecordQuery query) {
@@ -51,6 +56,17 @@ public class AttRecordServiceImpl implements AttRecordService {
         Page<AttRecord> result = attRecordMapper.selectPage(page, wrapper);
 
         List<AttRecordVO> voList = result.getRecords().stream().map(this::toVO).collect(Collectors.toList());
+        // 填充员工信息
+        Set<Long> empIds = result.getRecords().stream().map(AttRecord::getEmployeeId).collect(Collectors.toSet());
+        Map<Long, EmployeeInfo> empMap = employeeHelper.getEmployeeInfoMap(empIds);
+        voList.forEach(vo -> {
+            EmployeeInfo info = empMap.get(vo.getEmployeeId());
+            if (info != null) {
+                vo.setEmpNo(info.getEmpNo());
+                vo.setEmployeeName(info.getEmployeeName());
+                vo.setDeptName(info.getDeptName());
+            }
+        });
         PageResult<AttRecordVO> pageResult = new PageResult<>();
         pageResult.setTotal(result.getTotal());
         pageResult.setPage((int) result.getCurrent());
@@ -81,6 +97,11 @@ public class AttRecordServiceImpl implements AttRecordService {
                 .head(AttRecordImportDTO.class).sheet().doReadSync();
         for (Object obj : rawList) {
             AttRecordImportDTO dto = (AttRecordImportDTO) obj;
+            // 校验员工是否存在
+            if (!employeeHelper.employeeExists(dto.getEmployeeId())) {
+                throw new BusinessException(ResultCode.BAD_REQUEST.getCode(),
+                        "员工ID " + dto.getEmployeeId() + " 不存在，请检查导入数据");
+            }
             AttRecord record = new AttRecord();
             record.setEmployeeId(dto.getEmployeeId());
             if (dto.getRecordDate() != null && !dto.getRecordDate().isEmpty()) {

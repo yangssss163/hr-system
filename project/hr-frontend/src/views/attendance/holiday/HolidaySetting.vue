@@ -24,7 +24,7 @@
     <el-dialog v-model="dialogVisible" :title="isEdit ? '修改假期' : '创建假期'" width="500px">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
         <el-form-item label="假期名称" prop="name"><el-input v-model="form.name" /></el-form-item>
-        <el-form-item label="日期" prop="date"><el-date-picker v-model="form.date" type="date" value-format="yyyy-MM-dd" /></el-form-item>
+        <el-form-item label="日期" prop="date"><el-date-picker v-model="form.date" type="date" value-format="YYYY-MM-DD" placeholder="请选择日期" /></el-form-item>
         <el-form-item label="天数"><el-input-number v-model="form.days" :min="1" :max="30" /></el-form-item>
       </el-form>
       <template #footer>
@@ -45,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, onMounted, watch, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { holidayApi } from '@/api/modules/attendance'
 import type { Holiday, HolidayForm } from '@/api/types'
@@ -60,11 +60,22 @@ const editId = ref(0)
 const copyId = ref(0)
 
 const currentYear = ref(new Date().getFullYear())
-const years = [currentYear.value - 2, currentYear.value - 1, currentYear.value, currentYear.value + 1, currentYear.value + 2]
+const years = Array.from({ length: 21 }, (_, i) => currentYear.value - 10 + i)
 
-const form = reactive<HolidayForm>({ year: currentYear.value, name: '', date: '', days: 1 })
-const copyForm = reactive({ year: 0 })
-const rules = { name: [{ required: true, message: '请输入假期名称', trigger: 'blur' }], date: [{ required: true, message: '请选择日期', trigger: 'blur' }] }
+const emptyForm = (): HolidayForm => ({ year: currentYear.value, name: '', date: '', days: 1 })
+const form = ref<HolidayForm>(emptyForm())
+const copyForm = ref({ year: 0 })
+const rules = { name: [{ required: true, message: '请输入假期名称', trigger: 'blur' }], date: [{ required: true, message: '请选择日期', trigger: 'change' }] }
+
+const normalizeDate = (d: unknown): string => {
+  if (!d) return ''
+  if (typeof d === 'string') return d
+  if (Array.isArray(d)) {
+    const [y, m, day] = d
+    return `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  }
+  return String(d)
+}
 
 const loadData = async () => {
   loading.value = true
@@ -74,26 +85,58 @@ const loadData = async () => {
   } finally { loading.value = false }
 }
 
-const handleAdd = () => { isEdit.value = false; editId.value = 0; Object.assign(form, { year: currentYear.value, name: '', date: '', days: 1 }); dialogVisible.value = true }
-const handleEdit = (row: Holiday) => { isEdit.value = true; editId.value = row.id; Object.assign(form, { year: currentYear.value, name: row.name, date: row.date, days: row.days }); dialogVisible.value = true }
-const handleDelete = async (row: Holiday) => { await ElMessageBox.confirm('确定删除？'); await holidayApi.delete(row.id); ElMessage.success('删除成功'); loadData() }
-const handleCopy = (row: Holiday) => { copyId.value = row.id; copyForm.year = years.find(y => y !== currentYear.value) || 0; copyVisible.value = true }
+const handleAdd = () => {
+  isEdit.value = false
+  editId.value = 0
+  form.value = emptyForm()
+  dialogVisible.value = true
+  nextTick(() => formRef.value?.clearValidate())
+}
+
+const handleEdit = (row: Holiday) => {
+  isEdit.value = true
+  editId.value = row.id
+  form.value = { year: currentYear.value, name: row.name, date: normalizeDate(row.date), days: row.days }
+  dialogVisible.value = true
+  nextTick(() => formRef.value?.clearValidate())
+}
+
+const handleDelete = async (row: Holiday) => {
+  await ElMessageBox.confirm('确定删除？')
+  await holidayApi.delete(row.id)
+  ElMessage.success('删除成功')
+  loadData()
+}
+
+const handleCopy = (row: Holiday) => {
+  copyId.value = row.id
+  copyForm.value = { year: years.find(y => y !== currentYear.value) || 0 }
+  copyVisible.value = true
+}
 
 const handleSubmit = async () => {
   await formRef.value?.validate(async (valid: boolean) => {
     if (!valid) return
-    form.year = currentYear.value
-    if (isEdit.value) await holidayApi.update(editId.value, form)
-    else await holidayApi.create(form)
-    ElMessage.success('操作成功'); dialogVisible.value = false; loadData()
+    const submitData = { ...form.value, year: currentYear.value }
+    if (isEdit.value) await holidayApi.update(editId.value, submitData)
+    else await holidayApi.create(submitData)
+    ElMessage.success('操作成功')
+    dialogVisible.value = false
+    loadData()
   })
 }
 
 const handleCopySubmit = async () => {
-  await holidayApi.copy(copyId.value, copyForm.year)
+  await holidayApi.copy(copyId.value, copyForm.value.year)
   ElMessage.success('复制成功')
   copyVisible.value = false
 }
+
+watch(dialogVisible, (visible) => {
+  if (!visible) {
+    form.value = emptyForm()
+  }
+})
 
 onMounted(() => loadData())
 </script>

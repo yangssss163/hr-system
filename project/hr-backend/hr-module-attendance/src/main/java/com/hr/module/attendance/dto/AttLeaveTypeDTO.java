@@ -14,5 +14,5 @@ public class AttLeaveTypeDTO {
     private String code;
 
     private BigDecimal defaultDays;
-    private Integer enabled;
+    private Boolean enabled;
 }

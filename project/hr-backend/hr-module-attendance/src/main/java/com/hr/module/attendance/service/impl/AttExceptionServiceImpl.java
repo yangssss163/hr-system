@@ -6,6 +6,8 @@ import com.hr.common.result.PageResult;
 import com.hr.module.attendance.dto.AttExceptionQuery;
 import com.hr.module.attendance.dto.AttExceptionVO;
 import com.hr.module.attendance.entity.AttRecord;
+import com.hr.module.attendance.helper.AttendanceEmployeeHelper;
+import com.hr.module.attendance.helper.AttendanceEmployeeHelper.EmployeeInfo;
 import com.hr.module.attendance.mapper.AttRecordMapper;
 import com.hr.module.attendance.service.AttExceptionService;
 import lombok.RequiredArgsConstructor;
@@ -13,9 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -32,6 +32,7 @@ public class AttExceptionServiceImpl implements AttExceptionService {
     }
 
     private final AttRecordMapper attRecordMapper;
+    private final AttendanceEmployeeHelper employeeHelper;
 
     @Override
     public PageResult<AttExceptionVO> page(AttExceptionQuery query) {
@@ -49,6 +50,17 @@ public class AttExceptionServiceImpl implements AttExceptionService {
         Page<AttRecord> result = attRecordMapper.selectPage(page, wrapper);
 
         List<AttExceptionVO> voList = result.getRecords().stream().map(this::toVO).collect(Collectors.toList());
+        // 填充员工信息
+        Set<Long> empIds = result.getRecords().stream().map(AttRecord::getEmployeeId).collect(Collectors.toSet());
+        Map<Long, EmployeeInfo> empMap = employeeHelper.getEmployeeInfoMap(empIds);
+        voList.forEach(vo -> {
+            EmployeeInfo info = empMap.get(vo.getEmployeeId());
+            if (info != null) {
+                vo.setEmpNo(info.getEmpNo());
+                vo.setEmployeeName(info.getEmployeeName());
+                vo.setDeptName(info.getDeptName());
+            }
+        });
         PageResult<AttExceptionVO> pageResult = new PageResult<>();
         pageResult.setTotal(result.getTotal());
         pageResult.setPage((int) result.getCurrent());

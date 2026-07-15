@@ -63,7 +63,7 @@ public class AttLeaveTypeServiceImpl implements AttLeaveTypeService {
         entity.setName(dto.getName());
         entity.setCode(dto.getCode());
         entity.setDefaultDays(dto.getDefaultDays());
-        entity.setEnabled(dto.getEnabled());
+        entity.setEnabled(dto.getEnabled() != null && dto.getEnabled() ? 1 : 0);
     }
 
     private AttLeaveTypeVO toVO(AttLeaveType entity) {

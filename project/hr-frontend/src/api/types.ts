@@ -562,20 +562,22 @@ export interface LeaveTypeForm {
   enabled: boolean
 }
 
+export interface AttendanceSummaryItem {
+  employeeId: number
+  empNo: string
+  employeeName: string
+  deptName: string
+  shouldWorkDays: number
+  actualWorkDays: number
+  lateCount: number
+  earlyCount: number
+  absentCount: number
+  leaveCount: number
+  overtimeHours: number
+}
+
 export interface AttendanceSummaryReport {
-  records: {
-    employeeId: number
-    empNo: string
-    employeeName: string
-    deptName: string
-    shouldWorkDays: number
-    actualWorkDays: number
-    lateCount: number
-    earlyCount: number
-    absentCount: number
-    leaveCount: number
-    overtimeHours: number
-  }[]
+  records: AttendanceSummaryItem[]
 }
 
 export interface AttendanceDeduction {

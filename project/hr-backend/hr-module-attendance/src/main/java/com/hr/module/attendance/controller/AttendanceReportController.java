@@ -3,6 +3,7 @@ package com.hr.module.attendance.controller;
 import com.hr.common.result.PageResult;
 import com.hr.common.result.Result;
 import com.hr.module.attendance.dto.AttReportDetailQuery;
+import com.hr.module.attendance.dto.AttRecordVO;
 import com.hr.module.attendance.dto.AttReportSummaryVO;
 import com.hr.module.attendance.service.AttReportService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,14 +25,14 @@ public class AttendanceReportController {
     @Operation(summary = "明细表")
     @GetMapping("/detail")
     @PreAuthorize("hasAuthority('attendance:report:detail')")
-    public Result<PageResult<AttReportSummaryVO>> detail(AttReportDetailQuery query) {
+    public Result<PageResult<AttRecordVO>> detail(AttReportDetailQuery query) {
         return Result.success(attReportService.detail(query));
     }
 
     @Operation(summary = "汇总表")
     @GetMapping("/summary")
     @PreAuthorize("hasAuthority('attendance:report:summary')")
-    public Result<List<AttReportSummaryVO>> summary(@RequestParam String deptId, @RequestParam String month) {
+    public Result<List<AttReportSummaryVO>> summary(@RequestParam(required = false) String deptId, @RequestParam String month) {
         return Result.success(attReportService.summary(deptId, month));
     }
 }

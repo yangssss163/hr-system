@@ -84,8 +84,11 @@ const loadData = async () => {
 
 const handleImport = () => importVisible.value = true
 const handleCloseImport = () => { importVisible.value = false; uploadRef.value?.clearFiles() }
-const handleFileChange = (file: any) => {
-  ElMessage.success('文件上传成功')
+const handleFileChange = async (file: any) => {
+  const formData = new FormData()
+  formData.append('file', file.raw)
+  await attendanceRecordApi.import(formData)
+  ElMessage.success('导入成功')
   importVisible.value = false
   uploadRef.value?.clearFiles()
   loadData()

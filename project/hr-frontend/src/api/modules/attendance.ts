@@ -1,9 +1,9 @@
 import http from '../http'
-import type { PageResponse, AttendanceRecord, BatchFixRequest, AttendanceException, OaFlow, CardRule, CardRuleForm, Shift, ShiftForm, Holiday, HolidayForm, HolidayListResponse, LeaveQuota, LeaveType, LeaveTypeForm, AttendanceSummaryReport, AttendanceDeduction } from '../types'
+import type { PageResponse, AttendanceRecord, BatchFixRequest, AttendanceException, OaFlow, CardRule, CardRuleForm, Shift, ShiftForm, Holiday, HolidayForm, HolidayListResponse, LeaveQuota, LeaveType, LeaveTypeForm, AttendanceSummaryReport, AttendanceDeduction, AttendanceSummaryItem } from '../types'
 
 export const attendanceRecordApi = {
   list: (params: Record<string, any>) => http.get<PageResponse<AttendanceRecord>>('/attendance-records', { params }),
-  import: (data: FormData) => http.post('/attendance-records/import', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  import: (data: FormData) => http.post('/attendance-records/import', data),
   batchFix: (data: BatchFixRequest) => http.put('/attendance-records/batch-fix', data)
 }
 
@@ -13,7 +13,7 @@ export const attendanceExceptionApi = {
 
 export const oaFlowApi = {
   list: (params: Record<string, any>) => http.get<PageResponse<OaFlow>>('/oa-flows', { params }),
-  import: (data: FormData) => http.post('/oa-flows/import', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  import: (data: FormData) => http.post('/oa-flows/import', data),
   detail: (id: number) => http.get<OaFlow>(`/oa-flows/${id}`)
 }
 
@@ -37,12 +37,12 @@ export const holidayApi = {
   list: (year: number) => http.get<HolidayListResponse>('/holidays', { params: { year } }),
   create: (data: HolidayForm) => http.post<Holiday>('/holidays', data),
   update: (id: number, data: HolidayForm) => http.put<Holiday>(`/holidays/${id}`, data),
-  copy: (id: number, year: number) => http.post(`/holidays/${id}/copy`, { year }),
+  copy: (id: number, targetYear: number) => http.post(`/holidays/${id}/copy?targetYear=${targetYear}`),
   delete: (id: number) => http.delete(`/holidays/${id}`)
 }
 
 export const leaveQuotaApi = {
-  list: (params: Record<string, any>) => http.get<LeaveQuota[]>('/leave-quotas', { params }),
+  list: (params: Record<string, any>) => http.get<PageResponse<LeaveQuota>>('/leave-quotas', { params }),
   adjust: (id: number, data: { totalDays: number }) => http.put(`/leave-quotas/${id}`, data)
 }
 
@@ -55,7 +55,7 @@ export const leaveTypeApi = {
 
 export const attendanceReportApi = {
   detail: (params: Record<string, any>) => http.get<PageResponse<AttendanceRecord>>('/attendance-reports/detail', { params }),
-  summary: (params: Record<string, any>) => http.get<AttendanceSummaryReport>('/attendance-reports/summary', { params })
+  summary: (params: Record<string, any>) => http.get<AttendanceSummaryItem[]>('/attendance-reports/summary', { params }),
 }
 
 export const attendanceDeductionApi = {

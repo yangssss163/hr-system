@@ -2,9 +2,9 @@
   <div class="attendance-summary">
     <el-card>
       <div class="toolbar">
-        <el-date-picker v-model="searchForm.month" type="month" placeholder="选择月份" />
+        <el-date-picker v-model="searchForm.date" type="date" value-format="YYYY-MM-DD" placeholder="请选择日期" />
         <el-button type="primary" @click="loadData">查询</el-button>
-        <el-button @click="handleExport">导出报表</el-button>
+        <el-button @click="handleReset">重置</el-button>
       </div>
       <el-table :data="tableData" v-loading="loading">
         <el-table-column prop="employeeId" label="ID" width="60" />
@@ -25,27 +25,24 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
 import { attendanceReportApi } from '@/api/modules/attendance'
 
 const tableData = ref<any[]>([])
 const loading = ref(false)
 
-const searchForm = reactive({ month: '' })
+const now = new Date(); const searchForm = reactive({ date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01` })
 
 const loadData = async () => {
   loading.value = true
   try {
     const params: Record<string, any> = {}
-    if (searchForm.month) params.month = searchForm.month
+    if (searchForm.date) params.month = searchForm.date.substring(0, 7)
     const res = await attendanceReportApi.summary(params)
-    tableData.value = res.data.records || []
+    tableData.value = res.data || []
   } finally { loading.value = false }
 }
 
-const handleExport = () => {
-  ElMessage.success('导出功能开发中')
-}
+const handleReset = () => { const now = new Date(); searchForm.date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`; loadData() }
 
 onMounted(() => loadData())
 </script>

@@ -6,6 +6,7 @@ import lombok.Data;
 public class AttLeaveQuotaQuery {
     private Long employeeId;
     private Integer year;
+    private String keyword;
     private Integer page = 1;
     private Integer pageSize = 10;
 }

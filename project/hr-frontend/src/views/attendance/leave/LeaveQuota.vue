@@ -62,7 +62,7 @@ const loadData = async () => {
     const params: Record<string, any> = { year: searchForm.year }
     if (searchForm.keyword) params.keyword = searchForm.keyword
     const res = await leaveQuotaApi.list(params)
-    tableData.value = res.data || []
+    tableData.value = res.data.records || []
   } finally { loading.value = false }
 }
 

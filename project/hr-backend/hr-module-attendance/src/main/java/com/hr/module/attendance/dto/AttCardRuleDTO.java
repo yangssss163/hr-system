@@ -13,7 +13,7 @@ public class AttCardRuleDTO {
     private Integer minCardCount;
 
     @NotNull(message = "允许加班不能为空")
-    private Integer allowOvertime;
+    private Boolean allowOvertime;
 
     @NotNull(message = "状态不能为空")
     private Integer status;

@@ -63,7 +63,7 @@ public class AttCardRuleServiceImpl implements AttCardRuleService {
     private void applyDTO(AttCardRule entity, AttCardRuleDTO dto) {
         entity.setName(dto.getName());
         entity.setMinCardCount(dto.getMinCardCount());
-        entity.setAllowOvertime(dto.getAllowOvertime());
+        entity.setAllowOvertime(dto.getAllowOvertime() != null && dto.getAllowOvertime() ? 1 : 0);
         entity.setStatus(dto.getStatus());
     }
 

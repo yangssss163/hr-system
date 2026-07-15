@@ -19,10 +19,10 @@
         <el-table-column prop="type" label="异常类型" width="120">
           <template #default="{ row }"><el-tag :type="getTypeTag(row.type)">{{ getTypeText(row.type) }}</el-tag></template>
         </el-table-column>
-        <el-table-column prop="date" label="日期" width="120" />
-        <el-table-column prop="description" label="描述" min-width="200" />
-        <el-table-column prop="status" label="状态" width="100">
-          <template #default="{ row }"><el-tag :type="row.status === 'pending' ? 'warning' : 'success'">{{ row.status === 'pending' ? '待处理' : '已处理' }}</el-tag></template>
+        <el-table-column prop="recordDate" label="日期" width="120" />
+        <el-table-column prop="detail" label="描述" min-width="200" />
+        <el-table-column prop="oaStatus" label="OA状态" width="100">
+          <template #default="{ row }"><el-tag :type="row.oaStatus === '已审批' ? 'success' : 'warning'">{{ row.oaStatus }}</el-tag></template>
         </el-table-column>
       </el-table>
       <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize" :total="pagination.total" layout="total, sizes, prev, pager, next, jumper" />
