@@ -1,8 +1,8 @@
 package com.hr.module.attendance.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.hr.common.result.PageResult;
 import com.hr.module.attendance.dto.AttReportDetailQuery;
 import com.hr.module.attendance.dto.AttReportSummaryVO;
 import com.hr.module.attendance.entity.AttRecord;
@@ -25,7 +25,7 @@ public class AttReportServiceImpl implements AttReportService {
     private final AttRecordMapper attRecordMapper;
 
     @Override
-    public IPage<AttReportSummaryVO> detail(AttReportDetailQuery query) {
+    public PageResult<AttReportSummaryVO> detail(AttReportDetailQuery query) {
         LambdaQueryWrapper<AttRecord> wrapper = new LambdaQueryWrapper<>();
         if (query.getEmployeeId() != null) {
             wrapper.eq(AttRecord::getEmployeeId, query.getEmployeeId());
@@ -63,9 +63,12 @@ public class AttReportServiceImpl implements AttReportService {
             return vo;
         }).collect(Collectors.toList());
 
-        Page<AttReportSummaryVO> voPage = new Page<>(query.getPage(), query.getPageSize(), total);
-        voPage.setRecords(voList);
-        return voPage;
+        PageResult<AttReportSummaryVO> pageResult = new PageResult<>();
+        pageResult.setTotal((long) total);
+        pageResult.setPage(query.getPage());
+        pageResult.setPageSize(query.getPageSize());
+        pageResult.setRecords(voList);
+        return pageResult;
     }
 
     @Override

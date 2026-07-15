@@ -1,8 +1,8 @@
 package com.hr.module.attendance.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.hr.common.result.PageResult;
 import com.hr.module.attendance.dto.AttExceptionQuery;
 import com.hr.module.attendance.dto.AttExceptionVO;
 import com.hr.module.attendance.entity.AttRecord;
@@ -34,7 +34,7 @@ public class AttExceptionServiceImpl implements AttExceptionService {
     private final AttRecordMapper attRecordMapper;
 
     @Override
-    public IPage<AttExceptionVO> page(AttExceptionQuery query) {
+    public PageResult<AttExceptionVO> page(AttExceptionQuery query) {
         LambdaQueryWrapper<AttRecord> wrapper = new LambdaQueryWrapper<>();
         wrapper.ne(AttRecord::getStatus, "normal");
         if (StringUtils.hasText(query.getDateStart())) {
@@ -49,9 +49,12 @@ public class AttExceptionServiceImpl implements AttExceptionService {
         Page<AttRecord> result = attRecordMapper.selectPage(page, wrapper);
 
         List<AttExceptionVO> voList = result.getRecords().stream().map(this::toVO).collect(Collectors.toList());
-        Page<AttExceptionVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
-        voPage.setRecords(voList);
-        return voPage;
+        PageResult<AttExceptionVO> pageResult = new PageResult<>();
+        pageResult.setTotal(result.getTotal());
+        pageResult.setPage((int) result.getCurrent());
+        pageResult.setPageSize((int) result.getSize());
+        pageResult.setRecords(voList);
+        return pageResult;
     }
 
     private AttExceptionVO toVO(AttRecord entity) {

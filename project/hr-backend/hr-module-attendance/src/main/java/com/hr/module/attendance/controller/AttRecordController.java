@@ -1,6 +1,6 @@
 package com.hr.module.attendance.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.hr.common.result.PageResult;
 import com.hr.common.result.Result;
 import com.hr.module.attendance.dto.AttRecordBatchFixDTO;
 import com.hr.module.attendance.dto.AttRecordQuery;
@@ -12,6 +12,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @Tag(name = "打卡记录")
 @RestController
@@ -24,15 +27,15 @@ public class AttRecordController {
     @Operation(summary = "列表分页")
     @GetMapping
     @PreAuthorize("hasAuthority('attendance:record:list')")
-    public Result<IPage<AttRecordVO>> list(AttRecordQuery query) {
+    public Result<PageResult<AttRecordVO>> list(AttRecordQuery query) {
         return Result.success(attRecordService.page(query));
     }
 
     @Operation(summary = "导入")
     @PostMapping("/import")
     @PreAuthorize("hasAuthority('attendance:record:import')")
-    public Result<Void> importRecords(@RequestBody AttRecordBatchFixDTO dto) {
-        // TODO: import logic — consider extracting to service
+    public Result<Void> importRecords(@RequestParam("file") MultipartFile file) throws IOException {
+        attRecordService.importRecords(file);
         return Result.success();
     }
 

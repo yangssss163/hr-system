@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hr.common.enums.ResultCode;
 import com.hr.common.exception.BusinessException;
 import com.hr.module.employee.dto.EmployeeDTO;
+import com.hr.module.employee.dto.EmployeeImportDTO;
 import com.hr.module.employee.dto.EmployeeQuery;
 import com.hr.module.employee.dto.EmployeeVO;
 import com.hr.module.employee.entity.HrEmployee;
@@ -17,12 +18,19 @@ import com.hr.module.system.entity.SysPosition;
 import com.hr.module.system.mapper.SysCompanyMapper;
 import com.hr.module.system.mapper.SysDeptMapper;
 import com.hr.module.system.mapper.SysPositionMapper;
+import com.alibaba.excel.EasyExcel;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -141,6 +149,75 @@ public class HrEmployeeServiceImpl implements HrEmployeeService {
     @Transactional
     public void batchDelete(List<Long> ids) {
         hrEmployeeMapper.deleteBatchIds(ids);
+    }
+
+    @Override
+    @Transactional
+    public void importExcel(MultipartFile file) throws IOException {
+        List<Object> rawList = EasyExcel.read(file.getInputStream())
+                .head(EmployeeImportDTO.class).sheet().doReadSync();
+        for (Object obj : rawList) {
+            EmployeeImportDTO dto = (EmployeeImportDTO) obj;
+            HrEmployee e = new HrEmployee();
+            e.setEmpNo(dto.getEmpNo());
+            e.setName(dto.getName());
+            e.setGender(dto.getGender());
+            e.setIdCard(dto.getIdCard());
+            if (dto.getBirthday() != null && !dto.getBirthday().isEmpty()) {
+                e.setBirthday(LocalDate.parse(dto.getBirthday()));
+            }
+            e.setPhone(dto.getPhone());
+            e.setEmail(dto.getEmail());
+            e.setDeptId(dto.getDeptId());
+            e.setPositionId(dto.getPositionId());
+            e.setCompanyId(dto.getCompanyId());
+            if (dto.getEntryDate() != null && !dto.getEntryDate().isEmpty()) {
+                e.setEntryDate(LocalDate.parse(dto.getEntryDate()));
+            }
+            e.setStatus(dto.getStatus() != null ? dto.getStatus() : 1);
+            hrEmployeeMapper.insert(e);
+        }
+    }
+
+    @Override
+    public void exportExcel(HttpServletResponse response, EmployeeQuery query) throws IOException {
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setCharacterEncoding("utf-8");
+        String fileName = URLEncoder.encode("员工花名册", StandardCharsets.UTF_8).replaceAll("\\+", "%20");
+        response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
+
+        LambdaQueryWrapper<HrEmployee> wrapper = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(query.getKeyword())) {
+            wrapper.and(w -> w.like(HrEmployee::getName, query.getKeyword())
+                    .or().like(HrEmployee::getEmpNo, query.getKeyword()));
+        }
+        if (query.getDeptId() != null) {
+            wrapper.eq(HrEmployee::getDeptId, query.getDeptId());
+        }
+        if (query.getStatus() != null) {
+            wrapper.eq(HrEmployee::getStatus, query.getStatus());
+        }
+        List<HrEmployee> list = hrEmployeeMapper.selectList(wrapper);
+
+        List<EmployeeImportDTO> exportList = new ArrayList<>();
+        for (HrEmployee e : list) {
+            EmployeeImportDTO ed = new EmployeeImportDTO();
+            ed.setEmpNo(e.getEmpNo());
+            ed.setName(e.getName());
+            ed.setGender(e.getGender());
+            ed.setIdCard(e.getIdCard());
+            ed.setBirthday(e.getBirthday() != null ? e.getBirthday().toString() : null);
+            ed.setPhone(e.getPhone());
+            ed.setEmail(e.getEmail());
+            ed.setDeptId(e.getDeptId());
+            ed.setPositionId(e.getPositionId());
+            ed.setCompanyId(e.getCompanyId());
+            ed.setEntryDate(e.getEntryDate() != null ? e.getEntryDate().toString() : null);
+            ed.setStatus(e.getStatus());
+            exportList.add(ed);
+        }
+        EasyExcel.write(response.getOutputStream(), EmployeeImportDTO.class)
+                .sheet("员工花名册").doWrite(exportList);
     }
 
     private void applyDTO(HrEmployee e, EmployeeDTO dto) {

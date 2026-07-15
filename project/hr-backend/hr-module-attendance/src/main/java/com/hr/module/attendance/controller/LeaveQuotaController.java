@@ -1,6 +1,6 @@
 package com.hr.module.attendance.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.hr.common.result.PageResult;
 import com.hr.common.result.Result;
 import com.hr.module.attendance.dto.AttLeaveQuotaAdjustDTO;
 import com.hr.module.attendance.dto.AttLeaveQuotaQuery;
@@ -24,7 +24,7 @@ public class LeaveQuotaController {
     @Operation(summary = "列表分页")
     @GetMapping
     @PreAuthorize("hasAuthority('attendance:leave-quota:list')")
-    public Result<IPage<AttLeaveQuotaVO>> list(AttLeaveQuotaQuery query) {
+    public Result<PageResult<AttLeaveQuotaVO>> list(AttLeaveQuotaQuery query) {
         return Result.success(attLeaveQuotaService.page(query));
     }
 

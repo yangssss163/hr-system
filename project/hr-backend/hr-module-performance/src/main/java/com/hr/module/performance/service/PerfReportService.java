@@ -1,13 +1,13 @@
 package com.hr.module.performance.service;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.hr.common.result.PageResult;
 import com.hr.module.performance.vo.PerfRecordVO;
 
 import java.util.List;
 import java.util.Map;
 
 public interface PerfReportService {
-    IPage<PerfRecordVO> detail(Long planId, Long deptId, Integer page, Integer pageSize);
-    List<Map<String, Object>> deptSummary();
-    IPage<PerfRecordVO> employeeSummary(Integer page, Integer pageSize);
+    PageResult<PerfRecordVO> detail(Long planId, Long deptId, Long levelId, Integer page, Integer pageSize);
+    List<Map<String, Object>> deptSummary(Long planId);
+    PageResult<PerfRecordVO> employeeSummary(Long planId, Long deptId, Integer page, Integer pageSize);
 }

@@ -1,7 +1,6 @@
 package com.hr.module.attendance.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hr.module.attendance.dto.AttOaFlowQuery;
 import com.hr.module.attendance.dto.AttOaFlowVO;
@@ -10,10 +9,18 @@ import com.hr.module.attendance.mapper.AttOaFlowMapper;
 import com.hr.module.attendance.service.AttOaFlowService;
 import com.hr.common.enums.ResultCode;
 import com.hr.common.exception.BusinessException;
+import com.hr.common.result.PageResult;
+import com.alibaba.excel.EasyExcel;
+import com.hr.module.attendance.dto.AttOaFlowImportDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,7 +31,7 @@ public class AttOaFlowServiceImpl implements AttOaFlowService {
     private final AttOaFlowMapper attOaFlowMapper;
 
     @Override
-    public IPage<AttOaFlowVO> page(AttOaFlowQuery query) {
+    public PageResult<AttOaFlowVO> page(AttOaFlowQuery query) {
         LambdaQueryWrapper<AttOaFlow> wrapper = new LambdaQueryWrapper<>();
         if (query.getEmployeeId() != null) {
             wrapper.eq(AttOaFlow::getEmployeeId, query.getEmployeeId());
@@ -38,9 +45,12 @@ public class AttOaFlowServiceImpl implements AttOaFlowService {
         Page<AttOaFlow> result = attOaFlowMapper.selectPage(page, wrapper);
 
         List<AttOaFlowVO> voList = result.getRecords().stream().map(this::toVO).collect(Collectors.toList());
-        Page<AttOaFlowVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
-        voPage.setRecords(voList);
-        return voPage;
+        PageResult<AttOaFlowVO> pageResult = new PageResult<>();
+        pageResult.setTotal(result.getTotal());
+        pageResult.setPage((int) result.getCurrent());
+        pageResult.setPageSize((int) result.getSize());
+        pageResult.setRecords(voList);
+        return pageResult;
     }
 
     @Override
@@ -50,6 +60,30 @@ public class AttOaFlowServiceImpl implements AttOaFlowService {
             throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "OA流程不存在");
         }
         return toVO(entity);
+    }
+
+    @Override
+    @Transactional
+    public void importFlows(MultipartFile file) throws IOException {
+        List<Object> rawList = EasyExcel.read(file.getInputStream())
+                .head(AttOaFlowImportDTO.class).sheet().doReadSync();
+        for (Object obj : rawList) {
+            AttOaFlowImportDTO dto = (AttOaFlowImportDTO) obj;
+            AttOaFlow flow = new AttOaFlow();
+            flow.setEmployeeId(dto.getEmployeeId());
+            flow.setType(dto.getType());
+            if (dto.getStartDate() != null && !dto.getStartDate().isEmpty()) {
+                flow.setStartDate(LocalDate.parse(dto.getStartDate()));
+            }
+            if (dto.getEndDate() != null && !dto.getEndDate().isEmpty()) {
+                flow.setEndDate(LocalDate.parse(dto.getEndDate()));
+            }
+            if (dto.getDuration() != null && !dto.getDuration().isEmpty()) {
+                flow.setDuration(new BigDecimal(dto.getDuration()));
+            }
+            flow.setStatus(dto.getStatus());
+            attOaFlowMapper.insert(flow);
+        }
     }
 
     private AttOaFlowVO toVO(AttOaFlow entity) {

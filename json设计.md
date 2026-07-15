@@ -1656,6 +1656,7 @@ GET /api/attendance-reports/summary
 | GET | `/api/perf-records/{id}` | 考核详情 |
 | POST | `/api/perf-records` | 创建考核记录 |
 | PUT | `/api/perf-records/{id}` | 编辑考核记录 |
+| DELETE | `/api/perf-records/{id}` | 删除考核记录 |
 
 #### 查询参数
 
@@ -1693,6 +1694,7 @@ GET /api/attendance-reports/summary
 {
   "planId": 1,
   "employeeId": 1,
+  "evaluatorId": 5,
   "items": [
     { "indicator": "工作效率", "weight": 30, "score": 85 },
     { "indicator": "代码质量", "weight": 25, "score": 90 },
@@ -1705,13 +1707,61 @@ GET /api/attendance-reports/summary
 }
 ```
 
+> **字段说明**：`evaluatorId` 为可选字段，不传时后端自动取当前登录用户ID。
+
 ### 7.5 绩效报表 `/api/perf-reports`
 
 | 方法 | 路径 | 说明 |
 |---|---|---|
-| GET | `/api/perf-reports/detail` | 绩效明细表（`?planId=&deptId=`） |
-| GET | `/api/perf-reports/dept-summary` | 部门绩效汇总表 |
-| GET | `/api/perf-reports/employee-summary` | 职员绩效汇总表 |
+| GET | `/api/perf-reports/detail` | 绩效明细表（`?planId=&deptId=&levelId=&page=&pageSize=`） |
+| GET | `/api/perf-reports/dept-summary` | 部门绩效汇总表（`?planId=`） |
+| GET | `/api/perf-reports/employee-summary` | 职员绩效汇总表（`?planId=&deptId=&page=&pageSize=`） |
+
+#### 绩效明细表查询参数
+
+| 参数 | 类型 | 说明 |
+|---|---|---|
+| `planId` | int | 考核计划ID |
+| `deptId` | int | 部门ID |
+| `levelId` | int | 绩效等级ID |
+| `page` | int | 页码（默认1） |
+| `pageSize` | int | 每页条数（默认10） |
+
+#### 部门绩效汇总响应
+
+```json
+[
+  {
+    "deptId": 1,
+    "deptName": "技术部",
+    "totalCount": 5,
+    "avgScore": 84.3,
+    "excellentCount": 2
+  }
+]
+```
+
+#### 职员绩效汇总响应 `records`
+
+```json
+[
+  {
+    "id": 1,
+    "planId": 1,
+    "planName": "2026年Q3绩效考核",
+    "employeeId": 1,
+    "empNo": "EMP001",
+    "employeeName": "张三",
+    "deptName": "技术部",
+    "totalScore": 92.5,
+    "levelId": 1,
+    "levelName": "S",
+    "evaluatorName": "王五",
+    "evaluateTime": "2026-10-05 10:00:00",
+    "rank": 1
+  }
+]
+```
 
 ---
 
@@ -2714,7 +2764,7 @@ GET /api/common/options?type=education
 | 绩效等级 | `/api/perf-levels` | 5 |
 | 绩效工资 | `/api/perf-salaries` | 5 |
 | 考核计划 | `/api/perf-plans` | 5 |
-| 考核记录 | `/api/perf-records` | 4 |
+| 考核记录 | `/api/perf-records` | 5 |
 | 绩效报表 | `/api/perf-reports` | 3 |
 | 核算规则 | `/api/salary-rules` | 2 |
 | 薪酬字段 | `/api/salary-fields` | 5 |

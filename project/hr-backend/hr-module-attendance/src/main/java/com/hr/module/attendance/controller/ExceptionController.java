@@ -1,6 +1,6 @@
 package com.hr.module.attendance.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.hr.common.result.PageResult;
 import com.hr.common.result.Result;
 import com.hr.module.attendance.dto.AttExceptionQuery;
 import com.hr.module.attendance.dto.AttExceptionVO;
@@ -24,7 +24,7 @@ public class ExceptionController {
     @Operation(summary = "列表分页")
     @GetMapping
     @PreAuthorize("hasAuthority('attendance:exception:list')")
-    public Result<IPage<AttExceptionVO>> list(AttExceptionQuery query) {
+    public Result<PageResult<AttExceptionVO>> list(AttExceptionQuery query) {
         return Result.success(attExceptionService.page(query));
     }
 }

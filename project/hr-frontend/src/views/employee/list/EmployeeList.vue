@@ -95,7 +95,7 @@
           <el-input v-model="form.idCard" placeholder="请输入身份证号" />
         </el-form-item>
         <el-form-item label="出生日期">
-          <el-date-picker v-model="form.birthday" type="date" placeholder="请选择出生日期" style="width: 100%" />
+          <el-date-picker v-model="form.birthday" type="date" value-format="YYYY-MM-DD" placeholder="请选择出生日期" style="width: 100%" />
         </el-form-item>
         <el-form-item label="所属公司" prop="companyId">
           <el-select v-model="form.companyId" placeholder="请选择公司">
@@ -113,7 +113,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="入职日期" prop="entryDate">
-          <el-date-picker v-model="form.entryDate" type="date" placeholder="请选择入职日期" style="width: 100%" />
+          <el-date-picker v-model="form.entryDate" type="date" value-format="YYYY-MM-DD" placeholder="请选择入职日期" style="width: 100%" />
         </el-form-item>
         <el-form-item label="状态">
           <el-radio-group v-model="form.status">

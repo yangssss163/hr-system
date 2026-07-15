@@ -1,6 +1,6 @@
 package com.hr.module.performance.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.hr.common.result.PageResult;
 import com.hr.common.result.Result;
 import com.hr.module.performance.dto.PerfPlanDTO;
 import com.hr.module.performance.query.PerfPlanQuery;
@@ -24,7 +24,7 @@ public class PlanController {
     @Operation(summary = "绩效考核计划列表")
     @GetMapping
     @PreAuthorize("hasAuthority('perf:plan:list')")
-    public Result<IPage<PerfPlanVO>> list(@Valid PerfPlanQuery query) {
+    public Result<PageResult<PerfPlanVO>> list(@Valid PerfPlanQuery query) {
         return Result.success(perfPlanService.page(query));
     }
 

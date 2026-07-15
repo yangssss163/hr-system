@@ -52,3 +52,7 @@ export const revokeTransfer = (id: number) => {
 export const openAccount = (data: AccountOpenForm) => {
   return http.post('/accounts/open', data)
 }
+
+export const toggleAccount = (id: number) => {
+  return http.put(`/accounts/${id}/toggle`)
+}

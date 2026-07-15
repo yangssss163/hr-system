@@ -1,10 +1,10 @@
 package com.hr.module.performance.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hr.common.enums.ResultCode;
 import com.hr.common.exception.BusinessException;
+import com.hr.common.result.PageResult;
 import com.hr.module.performance.dto.PerfPlanDTO;
 import com.hr.module.performance.entity.PerfPlan;
 import com.hr.module.performance.entity.PerfPlanEmployee;
@@ -16,6 +16,7 @@ import com.hr.module.performance.vo.PerfPlanVO;
 import com.hr.module.system.entity.SysDept;
 import com.hr.module.system.mapper.SysDeptMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -24,6 +25,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PerfPlanServiceImpl implements PerfPlanService {
@@ -33,7 +35,7 @@ public class PerfPlanServiceImpl implements PerfPlanService {
     private final SysDeptMapper sysDeptMapper;
 
     @Override
-    public IPage<PerfPlanVO> page(PerfPlanQuery query) {
+    public PageResult<PerfPlanVO> page(PerfPlanQuery query) {
         LambdaQueryWrapper<PerfPlan> wrapper = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(query.getKeyword())) {
             wrapper.like(PerfPlan::getName, query.getKeyword());
@@ -50,9 +52,12 @@ public class PerfPlanServiceImpl implements PerfPlanService {
                 .map(this::toVO)
                 .collect(Collectors.toList());
 
-        Page<PerfPlanVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
-        voPage.setRecords(voList);
-        return voPage;
+        PageResult<PerfPlanVO> pageResult = new PageResult<>();
+        pageResult.setTotal(result.getTotal());
+        pageResult.setPage((int) result.getCurrent());
+        pageResult.setPageSize((int) result.getSize());
+        pageResult.setRecords(voList);
+        return pageResult;
     }
 
     @Override
@@ -67,17 +72,27 @@ public class PerfPlanServiceImpl implements PerfPlanService {
     @Override
     @Transactional
     public void create(PerfPlanDTO dto) {
-        PerfPlan entity = applyDTO(new PerfPlan(), dto);
-        perfPlanMapper.insert(entity);
+        try {
+            log.info("创建考核计划, dto={}", dto);
+            PerfPlan entity = applyDTO(new PerfPlan(), dto);
+            log.info("转换后的实体: name={}, deptId={}, startDate={}, endDate={}, status={}",
+                    entity.getName(), entity.getDeptId(), entity.getStartDate(), entity.getEndDate(), entity.getStatus());
+            perfPlanMapper.insert(entity);
+            log.info("插入成功, planId={}", entity.getId());
 
-        Long planId = entity.getId();
-        if (dto.getEmployeeIds() != null && !dto.getEmployeeIds().isEmpty()) {
-            for (Long empId : dto.getEmployeeIds()) {
-                PerfPlanEmployee pe = new PerfPlanEmployee();
-                pe.setPlanId(planId);
-                pe.setEmployeeId(empId);
-                perfPlanEmployeeMapper.insert(pe);
+            Long planId = entity.getId();
+            if (dto.getEmployeeIds() != null && !dto.getEmployeeIds().isEmpty()) {
+                for (Long empId : dto.getEmployeeIds()) {
+                    PerfPlanEmployee pe = new PerfPlanEmployee();
+                    pe.setPlanId(planId);
+                    pe.setEmployeeId(empId);
+                    perfPlanEmployeeMapper.insert(pe);
+                }
             }
+            log.info("考核计划创建完成, planId={}", planId);
+        } catch (Exception e) {
+            log.error("创建考核计划失败", e);
+            throw e;
         }
     }
 

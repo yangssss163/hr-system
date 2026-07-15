@@ -3,6 +3,7 @@ import type { PageResponse, PerfLevel, PerfLevelForm, PerfSalary, PerfSalaryForm
 
 export const perfLevelApi = {
   list: () => http.get<PerfLevel[]>('/perf-levels'),
+  detail: (id: number) => http.get<PerfLevel>(`/perf-levels/${id}`),
   create: (data: PerfLevelForm) => http.post<PerfLevel>('/perf-levels', data),
   update: (id: number, data: PerfLevelForm) => http.put<PerfLevel>(`/perf-levels/${id}`, data),
   delete: (id: number) => http.delete(`/perf-levels/${id}`)
@@ -10,6 +11,7 @@ export const perfLevelApi = {
 
 export const perfSalaryApi = {
   list: () => http.get<PerfSalary[]>('/perf-salaries'),
+  detail: (id: number) => http.get<PerfSalary>(`/perf-salaries/${id}`),
   create: (data: PerfSalaryForm) => http.post<PerfSalary>('/perf-salaries', data),
   update: (id: number, data: PerfSalaryForm) => http.put<PerfSalary>(`/perf-salaries/${id}`, data),
   delete: (id: number) => http.delete(`/perf-salaries/${id}`)
@@ -27,7 +29,8 @@ export const perfRecordApi = {
   list: (params: Record<string, any>) => http.get<PageResponse<PerfRecord>>('/perf-records', { params }),
   detail: (id: number) => http.get<PerfRecord>(`/perf-records/${id}`),
   create: (data: PerfRecordForm) => http.post<PerfRecord>('/perf-records', data),
-  update: (id: number, data: PerfRecordForm) => http.put<PerfRecord>(`/perf-records/${id}`, data)
+  update: (id: number, data: PerfRecordForm) => http.put<PerfRecord>(`/perf-records/${id}`, data),
+  delete: (id: number) => http.delete(`/perf-records/${id}`)
 }
 
 export const perfReportApi = {

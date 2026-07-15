@@ -9,10 +9,14 @@ import com.hr.module.employee.dto.EmployeeVO;
 import com.hr.module.employee.service.HrEmployeeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @Tag(name = "员工管理")
 @RestController
@@ -71,16 +75,15 @@ public class EmployeeController {
     @Operation(summary = "批量导入（Excel）")
     @PostMapping("/import")
     @PreAuthorize("hasAuthority('employee:import')")
-    public Result<Void> importExcel() {
-        // TODO: 实现 Excel 批量导入
+    public Result<Void> importExcel(@RequestParam("file") MultipartFile file) throws IOException {
+        hrEmployeeService.importExcel(file);
         return Result.success();
     }
 
     @Operation(summary = "导出 Excel")
     @GetMapping("/export")
     @PreAuthorize("hasAuthority('employee:export')")
-    public Result<Void> exportExcel() {
-        // TODO: 实现 Excel 导出
-        return Result.success();
+    public void exportExcel(HttpServletResponse response, EmployeeQuery query) throws IOException {
+        hrEmployeeService.exportExcel(response, query);
     }
 }

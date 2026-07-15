@@ -1,6 +1,6 @@
 package com.hr.module.performance.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.hr.common.result.PageResult;
 import com.hr.common.result.Result;
 import com.hr.module.performance.dto.PerfRecordDTO;
 import com.hr.module.performance.query.PerfRecordQuery;
@@ -25,7 +25,7 @@ public class PerfRecordController {
     @Operation(summary = "绩效考核记录列表")
     @GetMapping
     @PreAuthorize("hasAuthority('perf:record:list')")
-    public Result<IPage<PerfRecordVO>> list(@Valid PerfRecordQuery query) {
+    public Result<PageResult<PerfRecordVO>> list(@Valid PerfRecordQuery query) {
         return Result.success(perfRecordService.page(query));
     }
 
@@ -49,6 +49,14 @@ public class PerfRecordController {
     @PreAuthorize("hasAuthority('perf:record:edit')")
     public Result<Void> update(@PathVariable Long id, @Valid @RequestBody PerfRecordDTO dto) {
         perfRecordService.update(id, dto);
+        return Result.success();
+    }
+
+    @Operation(summary = "删除绩效考核记录")
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('perf:record:delete')")
+    public Result<Void> delete(@PathVariable Long id) {
+        perfRecordService.delete(id);
         return Result.success();
     }
 }

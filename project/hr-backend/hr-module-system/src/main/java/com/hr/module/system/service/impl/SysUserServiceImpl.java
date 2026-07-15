@@ -1,13 +1,11 @@
 package com.hr.module.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hr.common.enums.ResultCode;
 import com.hr.common.exception.BusinessException;
+import com.hr.common.result.PageResult;
 import com.hr.module.system.dto.RoleSimpleVO;
-import com.hr.module.system.dto.RoleVO;
 import com.hr.module.system.dto.UserDTO;
 import com.hr.module.system.dto.UserQuery;
 import com.hr.module.system.dto.UserVO;
@@ -33,7 +31,7 @@ public class SysUserServiceImpl implements com.hr.module.system.service.SysUserS
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public IPage<UserVO> page(UserQuery query) {
+    public PageResult<UserVO> page(UserQuery query) {
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(query.getKeyword())) {
             wrapper.and(w -> w.like(SysUser::getUsername, query.getKeyword())
@@ -79,7 +77,10 @@ public class SysUserServiceImpl implements com.hr.module.system.service.SysUserS
             return vo;
         }).collect(Collectors.toList());
 
-        Page<UserVO> result = new Page<>(userPage.getCurrent(), userPage.getSize(), userPage.getTotal());
+        PageResult<UserVO> result = new PageResult<>();
+        result.setTotal(userPage.getTotal());
+        result.setPage((int) userPage.getCurrent());
+        result.setPageSize((int) userPage.getSize());
         result.setRecords(voList);
         return result;
     }

@@ -19,4 +19,5 @@ public class PerfRecordVO {
     private String levelName;
     private String evaluatorName;
     private LocalDateTime evaluateTime;
+    private Integer rank;
 }

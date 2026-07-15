@@ -11,8 +11,8 @@
         <el-form-item label="手机号" prop="phone"><el-input v-model="form.phone" placeholder="请输入手机号" /></el-form-item>
         <el-form-item label="邮箱"><el-input v-model="form.email" placeholder="请输入邮箱" /></el-form-item>
         <el-form-item label="身份证号"><el-input v-model="form.idCard" placeholder="请输入身份证号" /></el-form-item>
-        <el-form-item label="出生日期"><el-date-picker v-model="form.birthday" type="date" placeholder="请选择出生日期" style="width: 100%" /></el-form-item>
-        <el-form-item label="入职日期" prop="entryDate"><el-date-picker v-model="form.entryDate" type="date" placeholder="请选择入职日期" style="width: 100%" /></el-form-item>
+        <el-form-item label="出生日期"><el-date-picker v-model="form.birthday" type="date" value-format="YYYY-MM-DD" placeholder="请选择出生日期" style="width: 100%" /></el-form-item>
+        <el-form-item label="入职日期" prop="entryDate"><el-date-picker v-model="form.entryDate" type="date" value-format="YYYY-MM-DD" placeholder="请选择入职日期" style="width: 100%" /></el-form-item>
         <el-form-item label="所属公司" prop="companyId">
           <el-select v-model="form.companyId" placeholder="请选择公司" style="width: 100%">
             <el-option v-for="item in companyOptions" :key="item.id" :label="item.label" :value="item.id" />

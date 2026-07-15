@@ -28,7 +28,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="生效日期" prop="effectiveDate">
-          <el-date-picker v-model="form.effectiveDate" type="date" placeholder="请选择生效日期" style="width: 100%" />
+          <el-date-picker v-model="form.effectiveDate" type="date" value-format="YYYY-MM-DD" placeholder="请选择生效日期" style="width: 100%" />
         </el-form-item>
         <el-form-item label="异动原因" prop="reason">
           <el-input v-model="form.reason" type="textarea" placeholder="请输入异动原因" :rows="3" />

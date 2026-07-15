@@ -1,6 +1,6 @@
 package com.hr.module.system.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.hr.common.result.PageResult;
 import com.hr.common.result.Result;
 import com.hr.module.system.dto.UserDTO;
 import com.hr.module.system.dto.UserQuery;
@@ -25,7 +25,7 @@ public class SysUserController {
     @Operation(summary = "用户列表（分页）")
     @GetMapping
     @PreAuthorize("hasAuthority('system:user:list')")
-    public Result<IPage<UserVO>> list(UserQuery query) {
+    public Result<PageResult<UserVO>> list(UserQuery query) {
         return Result.success(sysUserService.page(query));
     }
 

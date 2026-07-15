@@ -1,10 +1,11 @@
 package com.hr.module.performance.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hr.common.enums.ResultCode;
 import com.hr.common.exception.BusinessException;
+import com.hr.common.result.PageResult;
+import com.hr.framework.security.SecurityUtils;
 import com.hr.module.employee.entity.HrEmployee;
 import com.hr.module.employee.mapper.HrEmployeeMapper;
 import com.hr.module.performance.dto.PerfRecordDTO;
@@ -49,7 +50,7 @@ public class PerfRecordServiceImpl implements PerfRecordService {
     private final SysUserMapper sysUserMapper;
 
     @Override
-    public IPage<PerfRecordVO> page(PerfRecordQuery query) {
+    public PageResult<PerfRecordVO> page(PerfRecordQuery query) {
         LambdaQueryWrapper<PerfRecord> wrapper = new LambdaQueryWrapper<>();
         if (query.getPlanId() != null) {
             wrapper.eq(PerfRecord::getPlanId, query.getPlanId());
@@ -82,9 +83,12 @@ public class PerfRecordServiceImpl implements PerfRecordService {
                 .map(this::toVO)
                 .collect(Collectors.toList());
 
-        Page<PerfRecordVO> voPage = new Page<>(result.getCurrent(), result.getSize(), records.size());
-        voPage.setRecords(voList);
-        return voPage;
+        PageResult<PerfRecordVO> pageResult = new PageResult<>();
+        pageResult.setTotal((long) records.size());
+        pageResult.setPage((int) result.getCurrent());
+        pageResult.setPageSize((int) result.getSize());
+        pageResult.setRecords(voList);
+        return pageResult;
     }
 
     @Override
@@ -148,6 +152,14 @@ public class PerfRecordServiceImpl implements PerfRecordService {
     @Override
     @Transactional
     public void create(PerfRecordDTO dto) {
+        // 校验同一员工在同一考核计划下是否已存在记录
+        Long count = perfRecordMapper.selectCount(new LambdaQueryWrapper<PerfRecord>()
+                .eq(PerfRecord::getEmployeeId, dto.getEmployeeId())
+                .eq(PerfRecord::getPlanId, dto.getPlanId()));
+        if (count > 0) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "该员工在此考核计划下已有考核记录");
+        }
+
         PerfRecord entity = new PerfRecord();
         entity.setPlanId(dto.getPlanId());
         entity.setEmployeeId(dto.getEmployeeId());
@@ -156,6 +168,14 @@ public class PerfRecordServiceImpl implements PerfRecordService {
         entity.setEvaluation(dto.getEvaluation());
         entity.setEvaluateTime(LocalDateTime.now());
         entity.setStatus(1);
+
+        // 设置评估人：优先使用前端传入的，否则使用当前登录用户
+        if (dto.getEvaluatorId() != null) {
+            entity.setEvaluatorId(dto.getEvaluatorId());
+        } else {
+            entity.setEvaluatorId(SecurityUtils.getCurrentUserId());
+        }
+
         perfRecordMapper.insert(entity);
 
         if (dto.getItems() != null && !dto.getItems().isEmpty()) {
@@ -177,12 +197,30 @@ public class PerfRecordServiceImpl implements PerfRecordService {
         if (entity == null) {
             throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "考核记录不存在");
         }
+
+        // 校验唯一性（排除自身）
+        Long count = perfRecordMapper.selectCount(new LambdaQueryWrapper<PerfRecord>()
+                .eq(PerfRecord::getEmployeeId, dto.getEmployeeId())
+                .eq(PerfRecord::getPlanId, dto.getPlanId())
+                .ne(PerfRecord::getId, id));
+        if (count > 0) {
+            throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "该员工在此考核计划下已有考核记录");
+        }
+
         entity.setPlanId(dto.getPlanId());
         entity.setEmployeeId(dto.getEmployeeId());
         entity.setTotalScore(dto.getTotalScore());
         entity.setLevelId(dto.getLevelId());
         entity.setEvaluation(dto.getEvaluation());
         entity.setEvaluateTime(LocalDateTime.now());
+
+        // 设置评估人
+        if (dto.getEvaluatorId() != null) {
+            entity.setEvaluatorId(dto.getEvaluatorId());
+        } else {
+            entity.setEvaluatorId(SecurityUtils.getCurrentUserId());
+        }
+
         perfRecordMapper.updateById(entity);
 
         // 重新保存指标明细
@@ -198,6 +236,20 @@ public class PerfRecordServiceImpl implements PerfRecordService {
                 perfRecordItemMapper.insert(item);
             }
         }
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        PerfRecord entity = perfRecordMapper.selectById(id);
+        if (entity == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "考核记录不存在");
+        }
+        // 删除关联的指标明细
+        perfRecordItemMapper.delete(new LambdaQueryWrapper<PerfRecordItem>()
+                .eq(PerfRecordItem::getRecordId, id));
+        // 删除考核记录
+        perfRecordMapper.deleteById(id);
     }
 
     private PerfRecordVO toVO(PerfRecord entity) {

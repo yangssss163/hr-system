@@ -16,6 +16,12 @@
     <description>启动模块 — Spring Boot 入口、配置、Dockerfile</description>
 
     <dependencies>
+        <!-- Flyway 数据库迁移 -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+        </dependency>
+
         <!-- 聚合所有业务模块 -->
         <dependency>
             <groupId>com.hr</groupId>

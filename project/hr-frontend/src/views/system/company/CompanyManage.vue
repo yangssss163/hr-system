@@ -161,24 +161,23 @@ const handleNodeClick = (data: Company) => {
 
 const handleSubmit = async () => {
   if (!formRef.value) return
-  await formRef.value.validate(async (valid: boolean) => {
-    if (!valid) return
-    submitting.value = true
-    try {
-      if (isEdit.value) {
-        await updateCompany(editId.value, form)
-      } else {
-        await createCompany(form)
-      }
-      ElMessage.success(isEdit.value ? '修改成功' : '新增成功')
-      dialogVisible.value = false
-      loadData()
-    } catch {
-      // http.ts 已显示错误信息
-    } finally {
-      submitting.value = false
+  const valid = await formRef.value.validate()
+  if (!valid) return
+  submitting.value = true
+  try {
+    if (isEdit.value) {
+      await updateCompany(editId.value, form)
+    } else {
+      await createCompany(form)
     }
-  })
+    ElMessage.success(isEdit.value ? '修改成功' : '新增成功')
+    dialogVisible.value = false
+    await loadData()
+  } catch {
+    // http.ts 已显示错误信息
+  } finally {
+    submitting.value = false
+  }
 }
 
 onMounted(() => {

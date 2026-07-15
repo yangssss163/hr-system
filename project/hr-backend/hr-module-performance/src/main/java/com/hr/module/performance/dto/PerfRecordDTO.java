@@ -14,6 +14,8 @@ public class PerfRecordDTO {
     @NotNull
     private Long employeeId;
 
+    private Long evaluatorId;
+
     private List<PerfRecordItemDTO> items;
 
     private BigDecimal totalScore;

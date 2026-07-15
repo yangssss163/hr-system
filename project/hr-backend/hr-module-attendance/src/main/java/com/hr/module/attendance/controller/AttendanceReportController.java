@@ -1,6 +1,6 @@
 package com.hr.module.attendance.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.hr.common.result.PageResult;
 import com.hr.common.result.Result;
 import com.hr.module.attendance.dto.AttReportDetailQuery;
 import com.hr.module.attendance.dto.AttReportSummaryVO;
@@ -24,7 +24,7 @@ public class AttendanceReportController {
     @Operation(summary = "明细表")
     @GetMapping("/detail")
     @PreAuthorize("hasAuthority('attendance:report:detail')")
-    public Result<IPage<AttReportSummaryVO>> detail(AttReportDetailQuery query) {
+    public Result<PageResult<AttReportSummaryVO>> detail(AttReportDetailQuery query) {
         return Result.success(attReportService.detail(query));
     }
 
