@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS rec_interview (
     interviewer_id BIGINT COMMENT '面试官ID(关联sys_user)',
     interview_time DATETIME COMMENT '面试时间',
     location VARCHAR(200) COMMENT '面试地点',
+    checkin_time DATETIME COMMENT '签到时间',
     result VARCHAR(20) DEFAULT 'pending' COMMENT '结果: pending/pass/fail/offer/hired',
     score DECIMAL(3,1) COMMENT '评分',
     evaluation TEXT COMMENT '评价内容',
@@ -38,6 +39,7 @@ CREATE TABLE IF NOT EXISTS rec_interview (
     offer_remark VARCHAR(500) COMMENT 'Offer备注',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted TINYINT DEFAULT 0,
     INDEX idx_resume_id (resume_id)
 ) COMMENT '面试记录表';
 
@@ -49,7 +51,8 @@ CREATE TABLE IF NOT EXISTS rec_question (
     title VARCHAR(500) NOT NULL COMMENT '题目内容',
     answer TEXT COMMENT '参考答案',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted TINYINT DEFAULT 0
 ) COMMENT '面试题库表';
 
 -- 通知模板表
@@ -61,7 +64,8 @@ CREATE TABLE IF NOT EXISTS rec_notify_template (
     content TEXT COMMENT '消息内容(支持{name}等占位符)',
     status TINYINT DEFAULT 1 COMMENT '状态 1启用 0禁用',
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted TINYINT DEFAULT 0
 ) COMMENT '通知模板表';
 
 -- 面试黑名单表

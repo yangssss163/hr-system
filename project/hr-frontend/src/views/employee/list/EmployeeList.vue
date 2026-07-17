@@ -15,6 +15,22 @@
             <el-option v-for="item in positionOptions" :key="item.id" :label="item.label" :value="item.id" />
           </el-select>
         </el-form-item>
+        <el-form-item label="所属公司">
+          <el-select v-model="queryForm.companyId" placeholder="请选择公司" clearable style="width: 180px">
+            <el-option v-for="item in companyOptions" :key="item.id" :label="item.label" :value="item.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="入职日期">
+          <el-date-picker
+            v-model="queryForm.entryDateRange"
+            type="daterange"
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            value-format="YYYY-MM-DD"
+            style="width: 260px"
+          />
+        </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="queryForm.status" placeholder="请选择状态" clearable style="width: 120px">
             <el-option :value="1" label="在职" />
@@ -31,10 +47,10 @@
 
     <el-card>
       <div class="toolbar">
-        <el-button type="primary" @click="handleAdd"><el-icon><Plus /></el-icon>新增员工</el-button>
-        <el-button type="success" @click="handleImport"><el-icon><Upload /></el-icon>批量导入</el-button>
-        <el-button type="warning" @click="handleExport"><el-icon><Download /></el-icon>导出</el-button>
-        <el-button type="danger" @click="handleBatchDeleteAction"><el-icon><Delete /></el-icon>批量删除</el-button>
+        <el-button v-permission="'employee:create'" type="primary" @click="handleAdd"><el-icon><Plus /></el-icon>新增员工</el-button>
+        <el-button v-permission="'employee:import'" type="success" @click="handleImport"><el-icon><Upload /></el-icon>批量导入</el-button>
+        <el-button v-permission="'employee:export'" type="warning" @click="handleExport"><el-icon><Download /></el-icon>导出</el-button>
+        <el-button v-permission="'employee:delete'" type="danger" @click="handleBatchDeleteAction"><el-icon><Delete /></el-icon>批量删除</el-button>
       </div>
       <el-table :data="tableData" border stripe v-loading="loading" @selection-change="handleSelectionChange">
         <el-table-column type="selection" width="55" />
@@ -58,8 +74,8 @@
         <el-table-column label="操作" width="220">
           <template #default="{ row }">
             <el-button size="small" @click="handleView(row)">查看</el-button>
-            <el-button size="small" type="primary" @click="handleEdit(row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button v-permission="'employee:edit'" size="small" type="primary" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-permission="'employee:delete'" size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -152,17 +168,15 @@
     </el-dialog>
 
     <el-dialog v-model="importDialogVisible" title="批量导入" width="500px">
-      <el-form :model="importForm" label-width="100px">
+      <el-form label-width="100px">
         <el-form-item label="导入文件">
           <el-upload
             class="upload-demo"
             drag
-            action="/api/employees/import"
-            :headers="uploadHeaders"
-            :on-success="handleImportSuccess"
-            :on-error="handleImportError"
+            :http-request="handleImportRequest"
             :before-upload="beforeUpload"
             :auto-upload="false"
+            :on-change="handleFileChange"
             ref="uploadRef"
           >
             <el-icon class="el-icon--upload"><Upload /></el-icon>
@@ -175,7 +189,7 @@
       </el-form>
       <template #footer>
         <el-button @click="importDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitImport">开始导入</el-button>
+        <el-button type="primary" @click="submitImport" :loading="importing">开始导入</el-button>
       </template>
     </el-dialog>
   </div>
@@ -202,6 +216,8 @@ const queryForm = reactive({
   keyword: '',
   deptId: undefined as number | undefined,
   positionId: undefined as number | undefined,
+  companyId: undefined as number | undefined,
+  entryDateRange: undefined as [string, string] | undefined,
   status: undefined as number | undefined
 })
 
@@ -232,6 +248,9 @@ const {
     keyword: queryForm.keyword,
     deptId: queryForm.deptId,
     positionId: queryForm.positionId,
+    companyId: queryForm.companyId,
+    entryDateStart: queryForm.entryDateRange?.[0] || undefined,
+    entryDateEnd: queryForm.entryDateRange?.[1] || undefined,
     status: queryForm.status
   }),
   defaultForm: () => ({
@@ -256,7 +275,8 @@ const viewDialogVisible = ref(false)
 const importDialogVisible = ref(false)
 const formRef = ref()
 const uploadRef = ref()
-const uploadHeaders = { Authorization: `Bearer ${localStorage.getItem('token')}` }
+const importFile = ref<File | null>(null)
+const importing = ref(false)
 
 const viewForm = reactive<EmployeeDetail>({
   id: 0,
@@ -279,8 +299,6 @@ const viewForm = reactive<EmployeeDetail>({
   birthday: '',
   updateTime: ''
 })
-
-const importForm = reactive({ file: '' })
 
 const rules = {
   empNo: [{ required: true, message: '请输入工号', trigger: 'blur' }],
@@ -342,6 +360,8 @@ const handleReset = () => {
   queryForm.keyword = ''
   queryForm.deptId = undefined
   queryForm.positionId = undefined
+  queryForm.companyId = undefined
+  queryForm.entryDateRange = undefined
   queryForm.status = undefined
   loadData()
 }
@@ -387,7 +407,15 @@ const handleEdit = async (row: Employee) => {
 }
 
 // ---------- 导入 ----------
-const handleImport = () => { importDialogVisible.value = true }
+const handleImport = () => {
+  importFile.value = null
+  uploadRef.value?.clearFiles()
+  importDialogVisible.value = true
+}
+
+const handleFileChange = (file: any) => {
+  importFile.value = file.raw
+}
 
 const beforeUpload = (file: File) => {
   const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls')
@@ -397,19 +425,55 @@ const beforeUpload = (file: File) => {
   return true
 }
 
-const submitImport = () => { uploadRef.value?.submit() }
-
-const handleImportSuccess = (response: any) => {
-  ElMessage.success(`导入成功：成功 ${response.data.successCount} 条，失败 ${response.data.failCount} 条`)
-  importDialogVisible.value = false
-  loadData()
+const handleImportRequest = async (options: any) => {
+  const file = options.file as File
+  const formData = new FormData()
+  formData.append('file', file)
+  try {
+    const res = await importEmployees(formData)
+    ElMessage.success(`导入成功：成功 ${res.data.successCount} 条，失败 ${res.data.failCount} 条`)
+    importDialogVisible.value = false
+    loadData()
+  } catch {
+    ElMessage.error('导入失败，请检查文件格式')
+  }
+  return Promise.resolve()
 }
 
-const handleImportError = () => { ElMessage.error('导入失败') }
+const submitImport = () => {
+  if (!importFile.value) {
+    ElMessage.warning('请先选择文件')
+    return
+  }
+  importing.value = true
+  const formData = new FormData()
+  formData.append('file', importFile.value)
+  importEmployees(formData).then((res) => {
+    ElMessage.success(`导入成功：成功 ${res.data.successCount} 条，失败 ${res.data.failCount} 条`)
+    importDialogVisible.value = false
+    loadData()
+  }).catch(() => {
+    ElMessage.error('导入失败，请检查文件格式')
+  }).finally(() => {
+    importing.value = false
+  })
+}
 
 // ---------- 导出 ----------
 const handleExport = () => {
-  exportEmployees({ keyword: queryForm.keyword, deptId: queryForm.deptId, status: queryForm.status })
+  exportEmployees({ keyword: queryForm.keyword, deptId: queryForm.deptId, status: queryForm.status }).then((res: any) => {
+    const url = window.URL.createObjectURL(new Blob([res.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `员工花名册_${new Date().toISOString().slice(0, 10)}.xlsx`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    ElMessage.success('导出成功')
+  }).catch(() => {
+    ElMessage.error('导出失败')
+  })
 }
 
 // ---------- 提交（包装 useCRUD 的 handleSubmit） ----------

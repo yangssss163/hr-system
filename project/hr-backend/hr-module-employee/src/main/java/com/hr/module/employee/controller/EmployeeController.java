@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.hr.common.result.Result;
 import com.hr.module.employee.dto.BatchDeleteDTO;
 import com.hr.module.employee.dto.EmployeeDTO;
+import com.hr.module.employee.dto.EmployeeImportResponse;
 import com.hr.module.employee.dto.EmployeeQuery;
 import com.hr.module.employee.dto.EmployeeVO;
 import com.hr.module.employee.service.HrEmployeeService;
@@ -15,8 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
 
 @Tag(name = "员工管理")
 @RestController
@@ -75,15 +74,14 @@ public class EmployeeController {
     @Operation(summary = "批量导入（Excel）")
     @PostMapping("/import")
     @PreAuthorize("hasAuthority('employee:import')")
-    public Result<Void> importExcel(@RequestParam("file") MultipartFile file) throws IOException {
-        hrEmployeeService.importExcel(file);
-        return Result.success();
+    public Result<EmployeeImportResponse> importExcel(@RequestParam("file") MultipartFile file) {
+        return Result.success(hrEmployeeService.importExcel(file));
     }
 
     @Operation(summary = "导出 Excel")
     @GetMapping("/export")
     @PreAuthorize("hasAuthority('employee:export')")
-    public void exportExcel(HttpServletResponse response, EmployeeQuery query) throws IOException {
+    public void exportExcel(HttpServletResponse response, EmployeeQuery query) {
         hrEmployeeService.exportExcel(response, query);
     }
 }

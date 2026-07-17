@@ -2,37 +2,89 @@
   <div class="resume-list">
     <el-card>
       <div class="toolbar">
-        <el-button type="primary" @click="handleAdd">新增简历</el-button>
-        <el-button @click="handleImport">批量导入</el-button>
-        <el-button @click="handleDownloadTemplate">下载模板</el-button>
+        <el-button v-permission="'recruitment:resume:create'" type="primary" @click="handleAdd">新增简历</el-button>
+        <el-button v-permission="'recruitment:resume:import'" @click="handleImport">批量导入</el-button>
+        <el-button v-permission="'recruitment:resume:import'" @click="handleDownloadTemplate">下载模板</el-button>
       </div>
       <el-table :data="tableData" v-loading="loading">
         <el-table-column prop="id" label="ID" width="60" />
         <el-table-column prop="name" label="姓名" width="100" />
         <el-table-column prop="phone" label="手机号" width="130" />
-        <el-table-column prop="education" label="学历" width="100" />
+        <el-table-column prop="education" label="学历" width="100">
+          <template #default="{ row }">
+            <el-tag size="small">{{ educationMap[row.education] || row.education }}</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="applyPosition" label="应聘职位" width="120" />
-        <el-table-column prop="status" label="状态" width="100" />
+        <el-table-column prop="status" label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="statusTagType(row.status)" size="small">{{ statusMap[row.status] || row.status }}</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="createTime" label="创建时间" width="180" />
         <el-table-column label="操作" width="200">
           <template #default="{ row }">
-            <el-button size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button size="small" @click="handleInvite(row)">邀请</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button v-permission="'recruitment:resume:edit'" size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-permission="'recruitment:interview:create'" size="small" type="success" @click="openScheduleDialog(row)">安排面试</el-button>
+            <el-button v-permission="'recruitment:resume:delete'" size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
       <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize" :total="pagination.total" layout="total, sizes, prev, pager, next, jumper" />
     </el-card>
+
+    <!-- 新增/编辑简历弹窗 -->
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑简历' : '新增简历'" width="500px">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
         <el-form-item label="姓名" prop="name"><el-input v-model="form.name" /></el-form-item>
         <el-form-item label="手机号" prop="phone"><el-input v-model="form.phone" /></el-form-item>
-        <el-form-item label="学历"><el-select v-model="form.education"><el-option label="高中" value="high_school" /><el-option label="大专" value="junior_college" /><el-option label="本科" value="bachelor" /><el-option label="硕士" value="master" /><el-option label="博士" value="doctor" /></el-select></el-form-item>
+        <el-form-item label="学历">
+          <el-select v-model="form.education">
+            <el-option label="高中" value="high_school" />
+            <el-option label="大专" value="junior_college" />
+            <el-option label="本科" value="bachelor" />
+            <el-option label="硕士" value="master" />
+            <el-option label="博士" value="doctor" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="应聘职位"><el-input v-model="form.applyPosition" /></el-form-item>
       </el-form>
       <template #footer><el-button @click="dialogVisible=false">取消</el-button><el-button type="primary" @click="handleSubmit">确定</el-button></template>
     </el-dialog>
+
+    <!-- 安排面试弹窗 -->
+    <el-dialog v-model="scheduleVisible" title="安排面试" width="550px" @closed="scheduleFormRef?.resetFields()">
+      <el-form :model="scheduleForm" :rules="scheduleRules" ref="scheduleFormRef" label-width="100px">
+        <el-form-item label="候选人">
+          <el-input :value="scheduleCandidateName" disabled />
+        </el-form-item>
+        <el-form-item label="面试轮次" prop="interviewRound">
+          <el-input-number v-model="scheduleForm.interviewRound" :min="1" />
+        </el-form-item>
+        <el-form-item label="面试官" prop="interviewerId">
+          <el-select v-model="scheduleForm.interviewerId" filterable placeholder="请选择面试官">
+            <el-option v-for="u in interviewerList" :key="u.id" :label="u.realName" :value="u.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="面试时间" prop="interviewTime">
+          <el-date-picker v-model="scheduleForm.interviewTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" placeholder="选择面试时间" style="width:100%" />
+        </el-form-item>
+        <el-form-item label="地点" prop="location">
+          <el-input v-model="scheduleForm.location" placeholder="请输入面试地点" />
+        </el-form-item>
+        <el-form-item label="通知模板">
+          <el-select v-model="scheduleForm.templateId" placeholder="选择通知模板（可选）" clearable style="width:100%">
+            <el-option v-for="t in templateList" :key="t.id" :label="t.name" :value="t.id" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="scheduleVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleScheduleSubmit">确定</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 批量导入弹窗 -->
     <el-dialog v-model="importVisible" title="批量导入简历" width="500px">
       <div class="import-area">
         <el-upload ref="uploadRef" class="upload-demo" :show-file-list="false" :auto-upload="false" :on-change="handleFileChange" accept=".xlsx,.xls,.csv" :multiple="false">
@@ -68,24 +120,45 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
-import { resumeApi } from '@/api/modules/recruitment'
-import type { Resume, ResumeForm } from '@/api/types'
+import { resumeApi, interviewApi, notifyTemplateApi } from '@/api/modules/recruitment'
+import { getUserList } from '@/api/system/user'
+import type { Resume, ResumeForm, InterviewForm, NotifyTemplate, User } from '@/api/types'
 
 const tableData = ref<Resume[]>([])
 const loading = ref(false)
 const dialogVisible = ref(false)
+const scheduleVisible = ref(false)
 const importVisible = ref(false)
 const formRef = ref()
+const scheduleFormRef = ref()
 const uploadRef = ref()
 const isEdit = ref(false)
 const editId = ref(0)
+const scheduleCandidateId = ref(0)
+const scheduleCandidateName = ref('')
+const interviewerList = ref<User[]>([])
+const templateList = ref<NotifyTemplate[]>([])
 const importResult = ref<{ successCount: number; failCount: number; details: { row: number; name: string; phone: string; status: 'success' | 'fail'; message: string }[] } | null>(null)
 
 const pagination = reactive({ page: 1, pageSize: 10, total: 0 })
 const form = reactive<ResumeForm>({ name: '', phone: '', email: '', gender: 1, education: '', school: '', major: '', workYears: 0, applyPosition: '', source: '', status: 'new' })
-const rules = { name: [{ required: true, message: '请输入姓名', trigger: 'blur' }], phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }] }
+const scheduleForm = reactive<InterviewForm & { templateId?: number }>({ resumeId: 0, interviewRound: 1, interviewerId: 0, interviewTime: '', location: '', templateId: undefined })
 
-const educationMap: Record<string, string> = { '高中': 'high_school', '大专': 'junior_college', '本科': 'bachelor', '硕士': 'master', '博士': 'doctor' }
+const rules = { name: [{ required: true, message: '请输入姓名', trigger: 'blur' }], phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }] }
+const scheduleRules = {
+  interviewRound: [{ required: true, message: '请设置面试轮次' }],
+  interviewerId: [{ required: true, message: '请选择面试官', trigger: 'change' }],
+  interviewTime: [{ required: true, message: '请选择面试时间', trigger: 'change' }],
+  location: [{ required: true, message: '请输入面试地点', trigger: 'blur' }]
+}
+
+const educationMap: Record<string, string> = { high_school: '高中', junior_college: '大专', bachelor: '本科', master: '硕士', doctor: '博士' }
+const statusMap: Record<string, string> = { new: '新简历', screening: '筛选中', interview: '面试中', interviewed: '已面试', offer: '已发Offer', hired: '已入职', eliminated: '已淘汰', rejected: '已拒绝' }
+
+const statusTagType = (status: string) => {
+  const types: Record<string, string> = { new: 'info', screening: 'warning', interview: 'warning', interviewed: 'primary', offer: 'success', hired: '', eliminated: 'danger', rejected: 'danger' }
+  return types[status] || 'info'
+}
 
 const loadData = async () => {
   loading.value = true
@@ -96,10 +169,24 @@ const loadData = async () => {
   } finally { loading.value = false }
 }
 
+const loadInterviewerList = async () => {
+  try {
+    const res = await getUserList({ page: 1, pageSize: 200 })
+    interviewerList.value = res.data.records
+  } catch { /* ignore */ }
+}
+
+const loadTemplateList = async () => {
+  try {
+    const res = await notifyTemplateApi.list({ page: 1, pageSize: 200 })
+    templateList.value = res.data.records?.filter((t: NotifyTemplate) => t.status === 1) || []
+  } catch { /* ignore */ }
+}
+
+// ---- 简历 CRUD ----
 const handleAdd = () => { isEdit.value = false; editId.value = 0; Object.assign(form, { name: '', phone: '', education: '', applyPosition: '' }); dialogVisible.value = true }
 const handleEdit = (row: Resume) => { isEdit.value = true; editId.value = row.id; Object.assign(form, row); dialogVisible.value = true }
 const handleDelete = async (row: Resume) => { await ElMessageBox.confirm('确定删除？'); await resumeApi.delete(row.id); ElMessage.success('删除成功'); loadData() }
-const handleInvite = (_row: Resume) => {}
 
 const handleSubmit = async () => {
   await formRef.value?.validate(async (valid: boolean) => {
@@ -110,6 +197,25 @@ const handleSubmit = async () => {
   })
 }
 
+// ---- 安排面试 ----
+const openScheduleDialog = (row: Resume) => {
+  scheduleCandidateId.value = row.id
+  scheduleCandidateName.value = row.name
+  Object.assign(scheduleForm, { resumeId: row.id, interviewRound: 1, interviewerId: 0, interviewTime: '', location: '', templateId: undefined })
+  scheduleVisible.value = true
+}
+
+const handleScheduleSubmit = async () => {
+  await scheduleFormRef.value?.validate(async (valid: boolean) => {
+    if (!valid) return
+    await interviewApi.create({ resumeId: scheduleForm.resumeId, interviewRound: scheduleForm.interviewRound, interviewerId: scheduleForm.interviewerId, interviewTime: scheduleForm.interviewTime, location: scheduleForm.location })
+    ElMessage.success('面试安排成功')
+    scheduleVisible.value = false
+    loadData()
+  })
+}
+
+// ---- 导入 ----
 const handleImport = () => { importVisible.value = true; importResult.value = null }
 const handleCloseImport = () => { importVisible.value = false; importResult.value = null; uploadRef.value?.clearFiles() }
 
@@ -127,34 +233,20 @@ const handleDownloadTemplate = () => {
 const handleFileChange = async (file: any) => {
   const validExtensions = ['.xlsx', '.xls', '.csv']
   const ext = file.name.toLowerCase().substring(file.name.lastIndexOf('.'))
-  if (!validExtensions.includes(ext)) {
-    ElMessage.error('请上传 xlsx、xls 或 csv 格式的文件')
-    return
-  }
+  if (!validExtensions.includes(ext)) { ElMessage.error('请上传 xlsx、xls 或 csv 格式的文件'); return }
   const parsedData = await parseExcel(file.raw)
   await submitImportData(parsedData)
 }
 
 const submitImportData = async (data: ResumeForm[]) => {
-  if (data.length === 0) {
-    ElMessage.warning('未解析到有效数据')
-    return
-  }
+  if (data.length === 0) { ElMessage.warning('未解析到有效数据'); return }
   const details: { row: number; name: string; phone: string; status: 'success' | 'fail'; message: string }[] = data.map((item, index) => ({ row: index + 2, name: item.name, phone: item.phone, status: 'success', message: '' }))
-  let successCount = 0
-  let failCount = 0
+  let successCount = 0; let failCount = 0
   for (let i = 0; i < data.length; i++) {
-    try {
-      await resumeApi.create(data[i])
-      successCount++
-    } catch {
-      details[i].status = 'fail'
-      details[i].message = '导入失败'
-      failCount++
-    }
+    try { await resumeApi.create(data[i]); successCount++ }
+    catch { details[i].status = 'fail'; details[i].message = '导入失败'; failCount++ }
   }
-  importResult.value = { successCount, failCount, details }
-  loadData()
+  importResult.value = { successCount, failCount, details }; loadData()
 }
 
 const parseExcel = (file: File): Promise<ResumeForm[]> => {
@@ -169,27 +261,19 @@ const parseExcel = (file: File): Promise<ResumeForm[]> => {
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as string[][]
         const result: ResumeForm[] = []
         for (let i = 1; i < jsonData.length; i++) {
-          const row = jsonData[i]
-          if (!row || !row[0] || !row[1]) continue
-          const name = sanitizeString(row[0])
-          const phone = sanitizeString(row[1])
-          const email = sanitizeString(row[2] || '')
-          const genderText = sanitizeString(row[3] || '')
-          const educationText = sanitizeString(row[4] || '')
-          const school = sanitizeString(row[5] || '')
-          const major = sanitizeString(row[6] || '')
-          const workYears = parseInt(row[7]?.toString().trim() || '0')
-          const applyPosition = sanitizeString(row[8] || '')
-          const source = sanitizeString(row[9] || '')
+          const row = jsonData[i]; if (!row || !row[0] || !row[1]) continue
+          const name = sanitizeString(row[0]); const phone = sanitizeString(row[1])
+          const email = sanitizeString(row[2] || ''); const genderText = sanitizeString(row[3] || '')
+          const educationText = sanitizeString(row[4] || ''); const school = sanitizeString(row[5] || '')
+          const major = sanitizeString(row[6] || ''); const workYears = parseInt(row[7]?.toString().trim() || '0')
+          const applyPosition = sanitizeString(row[8] || ''); const source = sanitizeString(row[9] || '')
           const gender = genderText === '男' ? 1 : genderText === '女' ? 2 : 1
-          const education = educationMap[educationText] || educationText || ''
+          const eduReverse: Record<string, string> = { '高中': 'high_school', '大专': 'junior_college', '本科': 'bachelor', '硕士': 'master', '博士': 'doctor' }
+          const education = eduReverse[educationText] || educationText || ''
           result.push({ name, phone, email, gender, education, school, major, workYears, applyPosition, source, status: 'new' })
         }
         resolve(result)
-      } catch {
-        ElMessage.error('文件解析失败')
-        resolve([])
-      }
+      } catch { ElMessage.error('文件解析失败'); resolve([]) }
     }
     reader.readAsArrayBuffer(file)
   })
@@ -197,13 +281,10 @@ const parseExcel = (file: File): Promise<ResumeForm[]> => {
 
 const sanitizeString = (value: any): string => {
   if (!value) return ''
-  let str = String(value).trim()
-  str = str.replace(/\r/g, '')
-  str = str.replace(/[\x00-\x1F\x7F]/g, '')
-  return str
+  let str = String(value).trim(); str = str.replace(/\r/g, ''); str = str.replace(/[\x00-\x1F\x7F]/g, ''); return str
 }
 
-onMounted(() => loadData())
+onMounted(() => { loadData(); loadInterviewerList(); loadTemplateList() })
 </script>
 
 <style lang="scss" scoped>

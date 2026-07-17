@@ -9,7 +9,9 @@ import java.time.LocalDateTime;
 public class SysTaskVO {
     private Long id;
     private Long creatorId;
+    private String creatorName;
     private Long assigneeId;
+    private String assigneeName;
     private String title;
     private String content;
     private String priority;

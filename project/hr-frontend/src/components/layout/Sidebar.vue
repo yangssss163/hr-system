@@ -43,11 +43,14 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
+import { useUserStore } from '@/stores/user'
 import { constantRoutes } from '@/router/routes'
+import type { RouteRecordRaw } from 'vue-router'
 import { HomeFilled, Setting, FolderOpened, OfficeBuilding, Briefcase, User, Key, Menu, Grid, Clock, TrendCharts, Wallet, UserFilled, Operation } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const appStore = useAppStore()
+const userStore = useUserStore()
 
 const iconMap: Record<string, any> = {
   HomeFilled,
@@ -76,7 +79,33 @@ const activeMenu = computed(() => {
 
 const menuRoutes = computed(() => {
   const rootRoute = constantRoutes.find(r => r.path === '/')
-  return rootRoute?.children || []
+  if (!rootRoute?.children) return []
+
+  const filterByPermission = (routes: RouteRecordRaw[]): RouteRecordRaw[] => {
+    return routes
+      .filter(route => {
+        // 有子路由的父菜单：递归过滤，只保留有可访问子菜单的父级
+        if (route.children && route.children.length > 0) {
+          const filtered = filterByPermission(route.children)
+          return filtered.length > 0
+        }
+        // 叶子菜单：检查权限
+        const perm = route.meta?.permission as string | undefined
+        if (perm) {
+          return userStore.permissions.includes(perm)
+        }
+        // 无权限标记的页面（如 Home）默认展示
+        return true
+      })
+      .map(route => {
+        if (route.children && route.children.length > 0) {
+          return { ...route, children: filterByPermission(route.children) }
+        }
+        return route
+      })
+  }
+
+  return filterByPermission(rootRoute.children)
 })
 </script>
 

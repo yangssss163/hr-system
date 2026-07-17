@@ -1,0 +1,1 @@
+import{h as t}from"./index-DqxX81Zi.js";const a=()=>t.get("/companies/tree"),p=e=>t.post("/companies",e),r=(e,n)=>t.put(`/companies/${e}`,n),s=e=>t.delete(`/companies/${e}`);export{p as c,s as d,a as g,r as u};

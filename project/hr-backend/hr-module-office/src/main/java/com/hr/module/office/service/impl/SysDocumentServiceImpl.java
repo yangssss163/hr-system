@@ -10,6 +10,8 @@ import com.hr.module.office.dto.SysDocumentVO;
 import com.hr.module.office.entity.SysDocument;
 import com.hr.module.office.mapper.SysDocumentMapper;
 import com.hr.module.office.service.SysDocumentService;
+import com.hr.module.system.entity.SysUser;
+import com.hr.module.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -19,6 +21,7 @@ import org.springframework.util.StringUtils;
 public class SysDocumentServiceImpl implements SysDocumentService {
 
     private final SysDocumentMapper sysDocumentMapper;
+    private final SysUserMapper sysUserMapper;
 
     @Override
     public IPage<SysDocumentVO> page(SysDocumentQuery query) {
@@ -89,6 +92,10 @@ public class SysDocumentServiceImpl implements SysDocumentService {
         vo.setCategory(entity.getCategory());
         vo.setParentId(entity.getParentId());
         vo.setCreatorId(entity.getCreatorId());
+        if (entity.getCreatorId() != null) {
+            SysUser user = sysUserMapper.selectById(entity.getCreatorId());
+            if (user != null) vo.setCreatorName(user.getRealName());
+        }
         vo.setIsPublic(entity.getIsPublic());
         vo.setFileUrl(entity.getFileUrl());
         vo.setCreateTime(entity.getCreateTime());

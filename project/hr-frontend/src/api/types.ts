@@ -6,8 +6,9 @@ export interface ApiResponse<T = any> {
 
 export interface PageResponse<T = any> {
   total: number
-  page: number
-  pageSize: number
+  size: number
+  current: number
+  pages: number
   records: T[]
 }
 
@@ -68,6 +69,14 @@ export interface MenuForm {
 export interface ChangePasswordRequest {
   oldPassword: string
   newPassword: string
+}
+
+export interface RegisterRequest {
+  username: string
+  password: string
+  realName: string
+  phone?: string
+  email?: string
 }
 
 export interface Company {
@@ -786,7 +795,8 @@ export interface SalarySheet {
   tax: number
   totalDeduction: number
   netSalary: number
-  status: string
+  status: number // 0=草稿 1=已生成 2=已导出
+  customFields?: { name: string; code: string; type: string; value: number }[]
 }
 
 export interface UploadResponse {
@@ -803,42 +813,55 @@ export interface OptionItem {
 export interface Customer {
   id: number
   name: string
-  contact: string
   phone: string
   email: string
-  address: string
   industry: string
   source: string
-  status: number
+  level: string
+  status: string
+  ownerId: number
+  ownerName: string
+  province: string
+  city: string
+  address: string
+  contactName: string
+  contactPhone: string
+  remark: string
   createTime: string
-  updateTime: string
 }
 
 export interface CustomerForm {
   name: string
-  contact: string
   phone: string
   email?: string
-  address?: string
   industry?: string
   source?: string
-  status: number
+  level?: string
+  status: string
+  ownerId?: number
+  province?: string
+  city?: string
+  address?: string
+  contactName?: string
+  contactPhone?: string
+  remark?: string
 }
 
 export interface Opportunity {
   id: number
+  name: string
   customerId: number
   customerName: string
-  name: string
   amount: number
   stage: string
   probability: number
+  expectedCloseDate: string
   ownerId: number
   ownerName: string
-  expectedCloseDate: string
-  status: number
+  contactName: string
+  contactPhone: string
+  remark: string
   createTime: string
-  updateTime: string
 }
 
 export interface OpportunityForm {
@@ -847,9 +870,11 @@ export interface OpportunityForm {
   amount: number
   stage: string
   probability: number
-  ownerId: number
   expectedCloseDate: string
-  status: number
+  ownerId: number
+  contactName?: string
+  contactPhone?: string
+  remark?: string
 }
 
 export interface Order {
@@ -857,12 +882,14 @@ export interface Order {
   customerId: number
   customerName: string
   opportunityId: number
-  opportunityName: string
   orderNo: string
   amount: number
   status: string
+  signDate: string
+  ownerId: number
+  ownerName: string
+  remark: string
   createTime: string
-  updateTime: string
 }
 
 export interface OrderForm {
@@ -871,73 +898,96 @@ export interface OrderForm {
   orderNo: string
   amount: number
   status: string
+  signDate: string
+  ownerId?: number
+  remark?: string
 }
 
 export interface Payment {
   id: number
   orderId: number
-  orderNo: string
+  customerId: number
+  customerName: string
+  paymentNo: string
   amount: number
   paymentDate: string
   paymentMethod: string
-  status: number
+  status: string
+  ownerId: number
+  ownerName: string
+  remark: string
   createTime: string
 }
 
 export interface PaymentForm {
   orderId: number
+  paymentNo: string
   amount: number
   paymentDate: string
   paymentMethod: string
-  status: number
+  status: string
+  customerId?: number
+  ownerId?: number
+  remark?: string
 }
 
 export interface Refund {
   id: number
   orderId: number
-  orderNo: string
+  customerId: number
+  customerName: string
+  refundNo: string
   amount: number
   refundDate: string
   reason: string
-  status: number
+  status: string
+  ownerId: number
+  ownerName: string
   createTime: string
 }
 
 export interface RefundForm {
   orderId: number
+  refundNo: string
   amount: number
   refundDate: string
   reason: string
-  status: number
+  status: string
+  customerId?: number
+  ownerId?: number
 }
 
 export interface CrmExpense {
   id: number
-  customerId: number
-  customerName: string
+  name: string
   amount: number
-  type: string
-  description: string
   expenseDate: string
-  status: number
+  category: string
+  status: string
+  applicantId: number
+  applicantName: string
+  remark: string
   createTime: string
 }
 
 export interface CrmExpenseForm {
-  customerId: number
+  name: string
   amount: number
-  type: string
-  description?: string
   expenseDate: string
-  status: number
+  category: string
+  status: string
+  applicantId?: number
+  remark?: string
 }
 
 export interface Notice {
   id: number
   title: string
   content: string
-  type: string
+  type: number
   status: number
+  publisherId: number
+  publisherName: string
   publishTime: string
   createTime: string
 }
@@ -945,70 +995,84 @@ export interface Notice {
 export interface NoticeForm {
   title: string
   content: string
-  type: string
+  type: number
   status: number
+  publisherId?: number
+  publishTime?: string
 }
 
 export interface Document {
   id: number
-  name: string
-  type: string
+  title: string
+  content: string
+  category: string
+  parentId: number
+  creatorId: number
+  creatorName: string
+  isPublic: number
   fileUrl: string
-  fileSize: number
-  description: string
-  status: number
   createTime: string
 }
 
 export interface DocumentForm {
-  name: string
-  type: string
-  fileUrl: string
-  fileSize: number
-  description?: string
-  status: number
+  title: string
+  content?: string
+  category?: string
+  parentId?: number
+  creatorId?: number
+  isPublic?: number
+  fileUrl?: string
 }
 
 export interface Task {
   id: number
   title: string
-  description: string
+  content: string
+  creatorId: number
   assigneeId: number
   assigneeName: string
   priority: string
+  priorityName: string
   status: string
+  statusName: string
+  startDate: string
   dueDate: string
+  completeTime: string
   createTime: string
-  updateTime: string
 }
 
 export interface TaskForm {
   title: string
-  description?: string
+  content?: string
+  creatorId?: number
   assigneeId: number
   priority: string
   status: string
+  startDate?: string
   dueDate: string
 }
 
 export interface Schedule {
   id: number
+  userId: number
+  userName: string
   title: string
-  description: string
+  content: string
   startTime: string
   endTime: string
-  location: string
-  status: number
+  allDay: number
+  color: string
   createTime: string
 }
 
 export interface ScheduleForm {
+  userId: number
   title: string
-  description?: string
+  content?: string
   startTime: string
   endTime: string
-  location?: string
-  status: number
+  allDay?: number
+  color?: string
 }
 
 export interface Message {
@@ -1019,113 +1083,121 @@ export interface Message {
   senderName: string
   receiverId: number
   receiverName: string
-  type: string
-  status: string
+  isRead: number
   sendTime: string
-  readTime?: string
+  createTime: string
 }
 
 export interface MessageForm {
-  title: string
-  content: string
+  senderId: number
   receiverId: number
-  type: string
+  title: string
+  content?: string
+  isRead?: number
+  sendTime?: string
 }
 
 export interface ExpenseApproval {
   id: number
-  employeeId: number
-  empNo: string
-  employeeName: string
-  deptName: string
+  applicantId: number
+  applicantName: string
   amount: number
-  type: string
+  expenseDate: string
+  category: string
   description: string
-  applyDate: string
   status: string
-  approveComment?: string
-  approveTime?: string
+  statusName: string
+  approverId: number
+  approverName: string
   createTime: string
 }
 
 export interface ExpenseApprovalForm {
+  applicantId: number
   amount: number
-  type: string
+  expenseDate: string
+  category: string
   description: string
-  applyDate: string
 }
 
 export interface LeaveApproval {
   id: number
-  employeeId: number
-  empNo: string
-  employeeName: string
-  deptName: string
+  applicantId: number
+  applicantName: string
   leaveType: string
-  leaveTypeName: string
-  startTime: string
-  endTime: string
-  duration: number
+  startDate: string
+  endDate: string
+  days: number
   reason: string
   status: string
-  approveComment?: string
-  approveTime?: string
+  statusName: string
+  approverId: number
+  approverName: string
   createTime: string
 }
 
 export interface LeaveApprovalForm {
+  applicantId: number
   leaveType: string
-  startTime: string
-  endTime: string
+  startDate: string
+  endDate: string
+  days: number
   reason: string
 }
 
 export interface LoanApproval {
   id: number
-  employeeId: number
-  empNo: string
-  employeeName: string
-  deptName: string
+  applicantId: number
+  applicantName: string
   amount: number
+  loanDate: string
   reason: string
-  returnDate: string
+  repaymentDate: string
   status: string
-  approveComment?: string
-  approveTime?: string
+  statusName: string
+  approverId: number
+  approverName: string
   createTime: string
 }
 
 export interface LoanApprovalForm {
+  applicantId: number
   amount: number
+  loanDate: string
   reason: string
-  returnDate: string
+  repaymentDate: string
 }
 
 export interface TravelApproval {
   id: number
-  employeeId: number
-  empNo: string
-  employeeName: string
-  deptName: string
+  applicantId: number
+  applicantName: string
   destination: string
-  startTime: string
-  endTime: string
-  duration: number
+  startDate: string
+  endDate: string
+  days: number
   reason: string
+  companions: string
+  budget: number
   status: string
-  approveComment?: string
-  approveTime?: string
+  statusName: string
+  approverId: number
+  approverName: string
   createTime: string
 }
 
 export interface TravelApprovalForm {
+  applicantId: number
   destination: string
-  startTime: string
-  endTime: string
+  startDate: string
+  endDate: string
+  days: number
   reason: string
+  companions: string
+  budget: number
 }
 
 export interface ApprovalRequest {
-  approve: boolean
+  result: string
   comment?: string
 }

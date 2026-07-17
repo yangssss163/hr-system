@@ -2,7 +2,7 @@
   <div class="notify-template">
     <el-card>
       <div class="toolbar">
-        <el-button type="primary" @click="handleAdd">创建模板</el-button>
+        <el-button v-permission="'recruitment:notify-template:create'" type="primary" @click="handleAdd">创建模板</el-button>
       </div>
       <el-table :data="tableData" v-loading="loading">
         <el-table-column prop="id" label="ID" width="60" />
@@ -17,8 +17,8 @@
         <el-table-column prop="createTime" label="创建时间" width="180" />
         <el-table-column label="操作" width="150">
           <template #default="{ row }">
-            <el-button size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button v-permission="'recruitment:notify-template:edit'" size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-permission="'recruitment:notify-template:delete'" size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -34,7 +34,13 @@
           </el-select>
         </el-form-item>
         <el-form-item label="标题" prop="title"><el-input v-model="form.title" /></el-form-item>
-        <el-form-item label="内容" prop="content"><el-textarea v-model="form.content" rows="6" /></el-form-item>
+        <el-form-item label="内容" prop="content">
+          <el-input v-model="form.content" type="textarea" rows="6" placeholder='支持模板占位符，如：{name}候选人姓名、{position}应聘职位、{time}面试时间、{location}面试地点、{salary}薪资、{date}入职日期' />
+          <div class="template-hint">
+            可用占位符：<code>{name}</code>候选人姓名 <code>{position}</code>应聘职位 <code>{time}</code>面试时间
+            <code>{location}</code>面试地点 <code>{salary}</code>薪资 <code>{date}</code>入职日期 <code>{reason}</code>淘汰原因
+          </div>
+        </el-form-item>
         <el-form-item label="状态"><el-radio-group v-model="form.status"><el-radio :value="1">启用</el-radio><el-radio :value="0">禁用</el-radio></el-radio-group></el-form-item>
       </el-form>
       <template #footer><el-button @click="dialogVisible=false">取消</el-button><el-button type="primary" @click="handleSubmit">确定</el-button></template>
@@ -57,7 +63,7 @@ const editId = ref(0)
 
 const pagination = reactive({ page: 1, pageSize: 10, total: 0 })
 const form = reactive<NotifyTemplateForm>({ name: '', type: 'email', title: '', content: '', status: 1 })
-const rules = { name: [{ required: true, message: '请输入模板名称', trigger: 'blur' }], type: [{ required: true, message: '请选择类型', trigger: 'change' }], title: [{ required: true, message: '请输入标题', trigger: 'blur' }], content: [{ required: true, message: '请输入内容', trigger: 'blur' }] }
+const rules = { name: [{ required: true, message: '请输入模板名称', trigger: 'blur' }], type: [{ required: true, message: '请选择类型', trigger: 'change' }], title: [{ required: true, message: '请输入标题', trigger: 'blur' }] }
 
 const loadData = async () => {
   loading.value = true
@@ -86,4 +92,5 @@ onMounted(() => loadData())
 
 <style lang="scss" scoped>
 .notify-template { .toolbar { margin-bottom: 16px; display: flex; gap: 12px; } }
+.template-hint { margin-top: 6px; font-size: 12px; color: #909399; line-height: 1.8; code { background: #f0f2f5; padding: 1px 6px; border-radius: 3px; font-size: 11px; } }
 </style>

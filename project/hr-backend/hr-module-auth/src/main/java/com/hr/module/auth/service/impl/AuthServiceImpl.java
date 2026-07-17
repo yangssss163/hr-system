@@ -6,6 +6,7 @@ import com.hr.common.exception.BusinessException;
 import com.hr.framework.security.JwtUtils;
 import com.hr.framework.security.SecurityUtils;
 import com.hr.module.auth.dto.LoginDTO;
+import com.hr.module.auth.dto.RegisterDTO;
 import com.hr.module.auth.service.AuthService;
 import com.hr.module.system.dto.MenuTreeVO;
 import com.hr.module.system.entity.*;
@@ -71,6 +72,29 @@ public class AuthServiceImpl implements AuthService {
         result.put("token", token);
         result.put("expiresIn", expiration);
         return result;
+    }
+
+    @Override
+    public void register(RegisterDTO dto) {
+        // 检查用户名是否已存在
+        SysUser existUser = sysUserMapper.selectOne(
+                new LambdaQueryWrapper<SysUser>()
+                        .eq(SysUser::getUsername, dto.getUsername())
+        );
+        if (existUser != null) {
+            throw new BusinessException(ResultCode.DUPLICATE_RECORD.getCode(), "用户名已存在");
+        }
+
+        SysUser user = new SysUser();
+        user.setUsername(dto.getUsername());
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setRealName(dto.getRealName());
+        user.setPhone(dto.getPhone());
+        user.setEmail(dto.getEmail());
+        user.setStatus(1);
+        sysUserMapper.insert(user);
+
+        log.info("用户注册成功: username={}, userId={}", dto.getUsername(), user.getId());
     }
 
     @Override

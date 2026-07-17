@@ -2,6 +2,7 @@ package com.hr.module.auth.controller;
 
 import com.hr.common.result.Result;
 import com.hr.module.auth.dto.LoginDTO;
+import com.hr.module.auth.dto.RegisterDTO;
 import com.hr.module.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,6 +24,13 @@ public class AuthController {
     @PostMapping("/login")
     public Result<Map<String, Object>> login(@Valid @RequestBody LoginDTO dto) {
         return Result.success(authService.login(dto));
+    }
+
+    @Operation(summary = "用户注册")
+    @PostMapping("/register")
+    public Result<Void> register(@Valid @RequestBody RegisterDTO dto) {
+        authService.register(dto);
+        return Result.success();
     }
 
     @Operation(summary = "用户登出")

@@ -9,6 +9,8 @@ import com.hr.module.crm.dto.CrmCustomerVO;
 import com.hr.module.crm.entity.CrmCustomer;
 import com.hr.module.crm.mapper.CrmCustomerMapper;
 import com.hr.module.crm.service.CrmCustomerService;
+import com.hr.module.employee.entity.HrEmployee;
+import com.hr.module.employee.mapper.HrEmployeeMapper;
 import com.hr.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import org.springframework.util.StringUtils;
 public class CrmCustomerServiceImpl implements CrmCustomerService {
 
     private final CrmCustomerMapper crmCustomerMapper;
+    private final HrEmployeeMapper hrEmployeeMapper;
 
     @Override
     public IPage<CrmCustomerVO> page(CrmCustomerQuery query) {
@@ -114,6 +117,10 @@ public class CrmCustomerServiceImpl implements CrmCustomerService {
         vo.setContactPhone(entity.getContactPhone());
         vo.setRemark(entity.getRemark());
         vo.setCreateTime(entity.getCreateTime());
+        if (entity.getOwnerId() != null) {
+            HrEmployee emp = hrEmployeeMapper.selectById(entity.getOwnerId());
+            if (emp != null) vo.setOwnerName(emp.getName());
+        }
         return vo;
     }
 }

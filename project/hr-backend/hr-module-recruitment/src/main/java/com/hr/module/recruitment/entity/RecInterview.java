@@ -18,6 +18,7 @@ public class RecInterview extends BaseEntity {
     private Long interviewerId;
     private LocalDateTime interviewTime;
     private String location;
+    private LocalDateTime checkinTime;
     private String result;
     private BigDecimal score;
     private String evaluation;

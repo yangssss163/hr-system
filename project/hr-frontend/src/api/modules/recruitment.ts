@@ -43,6 +43,7 @@ export const notifyTemplateApi = {
 
 export const blacklistApi = {
   list: (params: Record<string, any>) => http.get<PageResponse<Blacklist>>('/blacklists', { params }),
+  detail: (id: number) => http.get<Blacklist>(`/blacklists/${id}`),
   create: (data: BlacklistForm) => http.post<Blacklist>('/blacklists', data),
   delete: (id: number) => http.delete(`/blacklists/${id}`)
 }

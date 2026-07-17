@@ -23,15 +23,22 @@ public class AdjustController {
     private final SalAdjustService salAdjustService;
 
     @Operation(summary = "调薪列表")
-    @GetMapping("/")
+    @GetMapping
     @PreAuthorize("hasAuthority('salary:adjust:list')")
     public Result<PageResult<SalAdjustVO>> list(@Valid SalAdjustQuery query) {
         IPage<SalAdjustVO> page = salAdjustService.page(query);
         return Result.success(PageResult.of(page));
     }
 
+    @Operation(summary = "调薪详情")
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('salary:adjust:list')")
+    public Result<SalAdjustVO> detail(@PathVariable Long id) {
+        return Result.success(salAdjustService.getById(id));
+    }
+
     @Operation(summary = "员工调薪")
-    @PostMapping("/")
+    @PostMapping
     @PreAuthorize("hasAuthority('salary:adjust:create')")
     public Result<Void> create(@Valid @RequestBody SalAdjustDTO dto) {
         salAdjustService.create(dto);

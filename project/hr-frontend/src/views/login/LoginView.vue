@@ -16,10 +16,11 @@
       
       <div class="login-right">
         <div class="login-card">
-          <h2 class="login-title">欢迎登录</h2>
-          <p class="login-subtitle">请输入您的账号和密码</p>
+          <h2 class="login-title">{{ isRegistering ? '注册账号' : '欢迎登录' }}</h2>
+          <p class="login-subtitle">{{ isRegistering ? '注册后由管理员分配权限' : '请输入您的账号和密码' }}</p>
           
-          <el-form :model="form" :rules="rules" ref="formRef" class="login-form">
+          <!-- 登录表单 -->
+          <el-form v-if="!isRegistering" :model="form" :rules="rules" ref="formRef" class="login-form">
             <el-form-item prop="username">
               <el-input
                 v-model="form.username"
@@ -47,9 +48,60 @@
               </el-button>
             </el-form-item>
           </el-form>
+
+          <!-- 注册表单 -->
+          <el-form v-else :model="registerForm" :rules="registerRules" ref="registerFormRef" class="login-form">
+            <el-form-item prop="username">
+              <el-input
+                v-model="registerForm.username"
+                placeholder="用户名（登录用）"
+                prefix-icon="User"
+                size="large"
+              />
+            </el-form-item>
+
+            <el-form-item prop="realName">
+              <el-input
+                v-model="registerForm.realName"
+                placeholder="真实姓名"
+                prefix-icon="UserFilled"
+                size="large"
+              />
+            </el-form-item>
+
+            <el-form-item prop="password">
+              <el-input
+                v-model="registerForm.password"
+                type="password"
+                placeholder="密码（至少6位）"
+                prefix-icon="Lock"
+                size="large"
+                show-password
+              />
+            </el-form-item>
+
+            <el-form-item prop="confirmPassword">
+              <el-input
+                v-model="registerForm.confirmPassword"
+                type="password"
+                placeholder="确认密码"
+                prefix-icon="Lock"
+                size="large"
+                show-password
+                @keyup.enter="handleRegister"
+              />
+            </el-form-item>
+
+            <el-form-item>
+              <el-button type="primary" size="large" class="login-btn" @click="handleRegister" :loading="registerLoading">
+                注 册
+              </el-button>
+            </el-form-item>
+          </el-form>
           
           <div class="login-footer">
-            <span>忘记密码？</span>
+            <span v-if="!isRegistering" @click="switchToRegister">没有账号？立即注册</span>
+            <span v-else @click="switchToLogin">已有账号？返回登录</span>
           </div>
         </div>
       </div>
@@ -62,17 +114,28 @@ import { ref, reactive } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
-import { Setting, OfficeBuilding } from '@element-plus/icons-vue'
+import { Setting, OfficeBuilding, UserFilled } from '@element-plus/icons-vue'
+import { register as registerApi } from '@/api/auth'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 const formRef = ref()
+const registerFormRef = ref()
 const loading = ref(false)
+const registerLoading = ref(false)
+const isRegistering = ref(false)
 
 const form = reactive({
   username: '',
   password: ''
+})
+
+const registerForm = reactive({
+  username: '',
+  realName: '',
+  password: '',
+  confirmPassword: ''
 })
 
 const rules = {
@@ -82,6 +145,62 @@ const rules = {
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' }
   ]
+}
+
+const validateConfirmPassword = (_rule: any, value: string, callback: any) => {
+  if (value !== registerForm.password) {
+    callback(new Error('两次输入的密码不一致'))
+  } else {
+    callback()
+  }
+}
+
+const registerRules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 50, message: '用户名长度3-50位', trigger: 'blur' }
+  ],
+  realName: [
+    { required: true, message: '请输入真实姓名', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
+  ],
+  confirmPassword: [
+    { required: true, message: '请确认密码', trigger: 'blur' },
+    { validator: validateConfirmPassword, trigger: 'blur' }
+  ]
+}
+
+const switchToRegister = () => {
+  isRegistering.value = true
+}
+
+const switchToLogin = () => {
+  isRegistering.value = false
+}
+
+const handleRegister = async () => {
+  if (!registerFormRef.value) return
+  await registerFormRef.value.validate(async (valid: boolean) => {
+    if (!valid) return
+    
+    registerLoading.value = true
+    try {
+      await registerApi({
+        username: registerForm.username,
+        password: registerForm.password,
+        realName: registerForm.realName
+      })
+      ElMessage.success('注册成功，请登录')
+      switchToLogin()
+    } catch (error: any) {
+      ElMessage.error(error?.message || '注册失败，请稍后重试')
+    } finally {
+      registerLoading.value = false
+    }
+  })
 }
 
 const handleLogin = async () => {

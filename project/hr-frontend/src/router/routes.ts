@@ -8,6 +8,12 @@ export const constantRoutes: RouteRecordRaw[] = [
     meta: { hidden: true }
   },
   {
+    path: '/403',
+    name: 'Forbidden',
+    component: () => import('@/views/error/403.vue'),
+    meta: { hidden: true }
+  },
+  {
     path: '/',
     component: () => import('@/components/layout/AppLayout.vue'),
     redirect: '/home',
@@ -38,10 +44,10 @@ export const constantRoutes: RouteRecordRaw[] = [
         meta: { title: '员工管理', icon: 'User' },
         children: [
           { path: 'list', name: 'EmployeeList', component: () => import('@/views/employee/list/EmployeeList.vue'), meta: { title: '员工花名册', permission: 'employee:list' } },
-          { path: 'onboarding', name: 'OnboardingForm', component: () => import('@/views/employee/onboarding/OnboardingForm.vue'), meta: { title: '创建入职', permission: 'employee:create' } },
+          { path: 'onboarding', name: 'OnboardingForm', component: () => import('@/views/employee/onboarding/OnboardingForm.vue'), meta: { title: '创建入职', permission: 'employee:onboarding' } },
           { path: 'transfer', name: 'TransferApply', component: () => import('@/views/employee/transfer/TransferApply.vue'), meta: { title: '异动申请', permission: 'employee:transfer:create' } },
           { path: 'transfer-detail', name: 'TransferDetail', component: () => import('@/views/employee/transfer/TransferDetail.vue'), meta: { title: '异动明细', permission: 'employee:transfer:list' } },
-          { path: 'account', name: 'AccountOpen', component: () => import('@/views/employee/account/AccountOpen.vue'), meta: { title: '账号开通', permission: 'employee:account:create' } }
+          { path: 'account', name: 'AccountOpen', component: () => import('@/views/employee/account/AccountOpen.vue'), meta: { title: '账号开通', permission: 'employee:account:list' } },
         ]
       },
       {
@@ -52,7 +58,7 @@ export const constantRoutes: RouteRecordRaw[] = [
           { path: 'resume', name: 'ResumeList', component: () => import('@/views/recruitment/resume/ResumeList.vue'), meta: { title: '简历管理', permission: 'recruitment:resume:list' } },
           { path: 'interview', name: 'InterviewList', component: () => import('@/views/recruitment/interview/InterviewList.vue'), meta: { title: '面试管理', permission: 'recruitment:interview:list' } },
           { path: 'question', name: 'QuestionBank', component: () => import('@/views/recruitment/question/QuestionBank.vue'), meta: { title: '面试题库', permission: 'recruitment:question:list' } },
-          { path: 'template', name: 'NotifyTemplate', component: () => import('@/views/recruitment/template/NotifyTemplate.vue'), meta: { title: '通知模板', permission: 'recruitment:template:list' } },
+          { path: 'template', name: 'NotifyTemplate', component: () => import('@/views/recruitment/template/NotifyTemplate.vue'), meta: { title: '通知模板', permission: 'recruitment:notify-template:list' } },
           { path: 'blacklist', name: 'BlacklistManage', component: () => import('@/views/recruitment/blacklist/BlacklistManage.vue'), meta: { title: '面试黑名单', permission: 'recruitment:blacklist:list' } },
           { path: 'report', name: 'RecruitmentReport', component: () => import('@/views/recruitment/report/RecruitmentReport.vue'), meta: { title: '招聘报表', permission: 'recruitment:report:list' } }
         ]
@@ -63,13 +69,13 @@ export const constantRoutes: RouteRecordRaw[] = [
         meta: { title: '考勤管理', icon: 'Clock' },
         children: [
           { path: 'record', name: 'AttendanceRecord', component: () => import('@/views/attendance/record/AttendanceRecord.vue'), meta: { title: '打卡记录', permission: 'attendance:record:list' } },
-          { path: 'card-rule', name: 'CardRuleSetting', component: () => import('@/views/attendance/rule/CardRuleSetting.vue'), meta: { title: '取卡规则', permission: 'attendance:card-rule:list' } },
+          { path: 'card-rule', name: 'CardRuleSetting', component: () => import('@/views/attendance/rule/CardRuleSetting.vue'), meta: { title: '取卡规则', permission: 'attendance:rule:list' } },
           { path: 'shift', name: 'ShiftSetting', component: () => import('@/views/attendance/shift/ShiftSetting.vue'), meta: { title: '班次设置', permission: 'attendance:shift:list' } },
           { path: 'holiday', name: 'HolidaySetting', component: () => import('@/views/attendance/holiday/HolidaySetting.vue'), meta: { title: '法定假期', permission: 'attendance:holiday:list' } },
           { path: 'leave-quota', name: 'LeaveQuota', component: () => import('@/views/attendance/leave/LeaveQuota.vue'), meta: { title: '假期额度', permission: 'attendance:leave-quota:list' } },
           { path: 'leave-type', name: 'LeaveTypeSetting', component: () => import('@/views/attendance/leave/LeaveTypeSetting.vue'), meta: { title: '假期设置', permission: 'attendance:leave-type:list' } },
           { path: 'exception', name: 'ExceptionManage', component: () => import('@/views/attendance/exception/ExceptionManage.vue'), meta: { title: '异常处理', permission: 'attendance:exception:list' } },
-          { path: 'oa', name: 'OAFlowManage', component: () => import('@/views/attendance/oa/OAFlowManage.vue'), meta: { title: 'OA流程', permission: 'attendance:oa-flow:list' } },
+          { path: 'oa', name: 'OAFlowManage', component: () => import('@/views/attendance/oa/OAFlowManage.vue'), meta: { title: 'OA流程', permission: 'attendance:oa:list' } },
           { path: 'deduction', name: 'DeductionSetting', component: () => import('@/views/attendance/deduction/DeductionSetting.vue'), meta: { title: '考勤扣款', permission: 'attendance:deduction:list' } },
           { path: 'report-detail', name: 'AttendanceDetail', component: () => import('@/views/attendance/report/AttendanceDetail.vue'), meta: { title: '考勤明细表', permission: 'attendance:report:detail' } },
           { path: 'report-summary', name: 'AttendanceSummary', component: () => import('@/views/attendance/report/AttendanceSummary.vue'), meta: { title: '考勤汇总表', permission: 'attendance:report:summary' } }
@@ -80,11 +86,11 @@ export const constantRoutes: RouteRecordRaw[] = [
         name: 'Performance',
         meta: { title: '绩效管理', icon: 'TrendCharts' },
         children: [
-          { path: 'level', name: 'LevelSetting', component: () => import('@/views/performance/level/LevelSetting.vue'), meta: { title: '绩效等级', permission: 'perf:level:list' } },
-          { path: 'salary', name: 'SalarySetting', component: () => import('@/views/performance/salary/SalarySetting.vue'), meta: { title: '绩效工资', permission: 'perf:salary:list' } },
-          { path: 'plan', name: 'PlanManage', component: () => import('@/views/performance/plan/PlanManage.vue'), meta: { title: '考核计划', permission: 'perf:plan:list' } },
-          { path: 'record', name: 'ExamRecord', component: () => import('@/views/performance/record/ExamRecord.vue'), meta: { title: '考核记录', permission: 'perf:record:list' } },
-          { path: 'report', name: 'PerfReport', component: () => import('@/views/performance/report/PerfReport.vue'), meta: { title: '绩效报表', permission: 'perf:report:list' } }
+          { path: 'level', name: 'LevelSetting', component: () => import('@/views/performance/level/LevelSetting.vue'), meta: { title: '绩效等级', permission: 'performance:level:list' } },
+          { path: 'salary', name: 'SalarySetting', component: () => import('@/views/performance/salary/SalarySetting.vue'), meta: { title: '绩效工资', permission: 'performance:salary:list' } },
+          { path: 'plan', name: 'PlanManage', component: () => import('@/views/performance/plan/PlanManage.vue'), meta: { title: '考核计划', permission: 'performance:plan:list' } },
+          { path: 'record', name: 'ExamRecord', component: () => import('@/views/performance/record/ExamRecord.vue'), meta: { title: '考核记录', permission: 'performance:record:list' } },
+          { path: 'report', name: 'PerfReport', component: () => import('@/views/performance/report/PerfReport.vue'), meta: { title: '绩效报表', permission: 'performance:report:list' } }
         ]
       },
       {

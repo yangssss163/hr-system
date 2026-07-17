@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hr.framework.security.SecurityUtils;
+import com.hr.module.system.entity.SysUser;
+import com.hr.module.system.mapper.SysUserMapper;
 import com.hr.module.workflow.dto.FlowApproveDTO;
 import com.hr.module.workflow.dto.FlowLoanDTO;
 import com.hr.module.workflow.dto.FlowLoanQuery;
@@ -17,12 +19,24 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class FlowLoanServiceImpl implements FlowLoanService {
 
+    private static final Map<String, String> STATUS_NAME_MAP = Map.of(
+            "pending", "待审批",
+            "approved", "已批准",
+            "rejected", "已拒绝",
+            "returned", "已归还"
+    );
+
     private final FlowLoanMapper flowLoanMapper;
+    private final SysUserMapper sysUserMapper;
 
     @Override
     public IPage<FlowLoanVO> page(FlowLoanQuery query) {
@@ -37,7 +51,18 @@ public class FlowLoanServiceImpl implements FlowLoanService {
 
         Page<FlowLoan> page = new Page<>(query.getPage(), query.getPageSize());
         IPage<FlowLoan> result = flowLoanMapper.selectPage(page, wrapper);
-        return result.convert(this::toVO);
+
+        // 批量查询用户名
+        List<Long> userIds = result.getRecords().stream()
+                .flatMap(e -> java.util.stream.Stream.of(e.getApplicantId(), e.getApproverId()))
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, String> userNameMap = userIds.isEmpty() ? Map.of() :
+                sysUserMapper.selectBatchIds(userIds).stream()
+                        .collect(Collectors.toMap(SysUser::getId, SysUser::getRealName));
+
+        return result.convert(e -> toVO(e, userNameMap));
     }
 
     @Override
@@ -46,7 +71,8 @@ public class FlowLoanServiceImpl implements FlowLoanService {
         if (entity == null) {
             return null;
         }
-        return toVO(entity);
+        Map<Long, String> userNameMap = buildUserNameMap(entity);
+        return toVO(entity, userNameMap);
     }
 
     @Override
@@ -97,16 +123,29 @@ public class FlowLoanServiceImpl implements FlowLoanService {
         flowLoanMapper.updateById(entity);
     }
 
-    private FlowLoanVO toVO(FlowLoan entity) {
+    private Map<Long, String> buildUserNameMap(FlowLoan entity) {
+        List<Long> ids = java.util.stream.Stream.of(entity.getApplicantId(), entity.getApproverId())
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        return ids.isEmpty() ? Map.of() :
+                sysUserMapper.selectBatchIds(ids).stream()
+                        .collect(Collectors.toMap(SysUser::getId, SysUser::getRealName));
+    }
+
+    private FlowLoanVO toVO(FlowLoan entity, Map<Long, String> userNameMap) {
         FlowLoanVO vo = new FlowLoanVO();
         vo.setId(entity.getId());
         vo.setApplicantId(entity.getApplicantId());
+        vo.setApplicantName(userNameMap.get(entity.getApplicantId()));
         vo.setAmount(entity.getAmount());
         vo.setLoanDate(entity.getLoanDate() != null ? entity.getLoanDate().toString() : null);
         vo.setReason(entity.getReason());
         vo.setRepaymentDate(entity.getRepaymentDate() != null ? entity.getRepaymentDate().toString() : null);
         vo.setStatus(entity.getStatus());
+        vo.setStatusName(STATUS_NAME_MAP.get(entity.getStatus()));
         vo.setApproverId(entity.getApproverId());
+        vo.setApproverName(entity.getApproverId() != null ? userNameMap.get(entity.getApproverId()) : null);
         vo.setCreateTime(entity.getCreateTime());
         return vo;
     }

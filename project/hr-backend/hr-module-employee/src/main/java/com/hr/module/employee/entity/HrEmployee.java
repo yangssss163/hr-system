@@ -5,6 +5,7 @@ import com.hr.common.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Data
@@ -24,4 +25,5 @@ public class HrEmployee extends BaseEntity {
     private Long companyId;
     private LocalDate entryDate;
     private Integer status;
+    private BigDecimal baseSalary;
 }

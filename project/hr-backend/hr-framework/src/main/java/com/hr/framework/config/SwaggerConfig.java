@@ -1,8 +1,11 @@
 package com.hr.framework.config;
 
+import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -18,6 +21,13 @@ public class SwaggerConfig {
                         .description("HR 管理系统后端接口文档")
                         .contact(new Contact()
                                 .name("HR Team")
-                                .email("admin@hr.com")));
+                                .email("admin@hr.com")))
+                .addSecurityItem(new SecurityRequirement().addList("Bearer"))
+                .components(new Components()
+                        .addSecuritySchemes("Bearer", new SecurityScheme()
+                                .name("Authorization")
+                                .type(SecurityScheme.Type.HTTP)
+                                .scheme("bearer")
+                                .bearerFormat("JWT")));
     }
 }

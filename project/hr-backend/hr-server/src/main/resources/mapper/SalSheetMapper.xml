@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hr.module.salary.mapper.SalSheetMapper">
+
+    <!--
+        原生 SQL INSERT，完全绕过 MyBatis Plus @TableLogic 处理。
+    -->
+    <insert id="insertRaw" parameterType="com.hr.module.salary.entity.SalSheet">
+        INSERT INTO sal_sheet (
+            employee_id, month, base_salary, perf_salary, subsidy, overtime_pay,
+            total_income, social_insurance, tax, total_deduction, net_salary,
+            status, deleted, field_values, create_time, update_time
+        ) VALUES (
+            #{employeeId}, #{month}, #{baseSalary}, #{perfSalary}, #{subsidy}, #{overtimePay},
+            #{totalIncome}, #{socialInsurance}, #{tax}, #{totalDeduction}, #{netSalary},
+            #{status}, #{deleted}, #{fieldValues}, NOW(), NOW()
+        )
+    </insert>
+
+    <!--
+        原生 SQL UPDATE，完全绕过 MyBatis Plus @TableLogic 处理。
+        不添加 deleted = 0 条件，按 employee_id + month 匹配（含软删除记录），
+        并显式设置 deleted = 0 恢复记录。
+    -->
+    <update id="updateRawByEmpMonth" parameterType="com.hr.module.salary.entity.SalSheet">
+        UPDATE sal_sheet SET
+            base_salary = #{baseSalary},
+            perf_salary = #{perfSalary},
+            subsidy = #{subsidy},
+            overtime_pay = #{overtimePay},
+            total_income = #{totalIncome},
+            social_insurance = #{socialInsurance},
+            tax = #{tax},
+            total_deduction = #{totalDeduction},
+            net_salary = #{netSalary},
+            status = #{status},
+            deleted = 0,
+            update_time = NOW()
+        WHERE employee_id = #{employeeId}
+          AND month = #{month}
+    </update>
+
+</mapper>

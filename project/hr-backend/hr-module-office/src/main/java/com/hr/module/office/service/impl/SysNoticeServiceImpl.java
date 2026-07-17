@@ -10,6 +10,8 @@ import com.hr.module.office.dto.SysNoticeVO;
 import com.hr.module.office.entity.SysNotice;
 import com.hr.module.office.mapper.SysNoticeMapper;
 import com.hr.module.office.service.SysNoticeService;
+import com.hr.module.system.entity.SysUser;
+import com.hr.module.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -19,6 +21,7 @@ import org.springframework.util.StringUtils;
 public class SysNoticeServiceImpl implements SysNoticeService {
 
     private final SysNoticeMapper sysNoticeMapper;
+    private final SysUserMapper sysUserMapper;
 
     @Override
     public IPage<SysNoticeVO> page(SysNoticeQuery query) {
@@ -87,6 +90,10 @@ public class SysNoticeServiceImpl implements SysNoticeService {
         vo.setType(entity.getType());
         vo.setStatus(entity.getStatus());
         vo.setPublisherId(entity.getPublisherId());
+        if (entity.getPublisherId() != null) {
+            SysUser user = sysUserMapper.selectById(entity.getPublisherId());
+            if (user != null) vo.setPublisherName(user.getRealName());
+        }
         vo.setPublishTime(entity.getPublishTime());
         vo.setCreateTime(entity.getCreateTime());
         return vo;

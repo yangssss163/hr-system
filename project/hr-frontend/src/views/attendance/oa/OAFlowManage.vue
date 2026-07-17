@@ -2,7 +2,7 @@
   <div class="oa-flow-manage">
     <el-card>
       <div class="toolbar">
-        <el-button type="primary" @click="handleImport">导入OA单据</el-button>
+        <el-button v-permission="'attendance:oa:import'" type="primary" @click="handleImport">导入OA单据</el-button>
       </div>
       <el-table :data="tableData" v-loading="loading">
         <el-table-column prop="id" label="ID" width="60" />

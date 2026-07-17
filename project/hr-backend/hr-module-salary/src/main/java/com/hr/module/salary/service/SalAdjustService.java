@@ -7,5 +7,6 @@ import com.hr.module.salary.dto.SalAdjustVO;
 
 public interface SalAdjustService {
     IPage<SalAdjustVO> page(SalAdjustQuery query);
+    SalAdjustVO getById(Long id);
     void create(SalAdjustDTO dto);
 }

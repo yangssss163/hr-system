@@ -9,6 +9,8 @@ import com.hr.module.crm.dto.CrmExpenseVO;
 import com.hr.module.crm.entity.CrmExpense;
 import com.hr.module.crm.mapper.CrmExpenseMapper;
 import com.hr.module.crm.service.CrmExpenseService;
+import com.hr.module.employee.entity.HrEmployee;
+import com.hr.module.employee.mapper.HrEmployeeMapper;
 import com.hr.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import java.time.LocalDate;
 public class CrmExpenseServiceImpl implements CrmExpenseService {
 
     private final CrmExpenseMapper crmExpenseMapper;
+    private final HrEmployeeMapper hrEmployeeMapper;
 
     @Override
     public IPage<CrmExpenseVO> page(CrmExpenseQuery query) {
@@ -103,6 +106,10 @@ public class CrmExpenseServiceImpl implements CrmExpenseService {
         vo.setApplicantId(entity.getApplicantId());
         vo.setRemark(entity.getRemark());
         vo.setCreateTime(entity.getCreateTime());
+        if (entity.getApplicantId() != null) {
+            HrEmployee emp = hrEmployeeMapper.selectById(entity.getApplicantId());
+            if (emp != null) vo.setApplicantName(emp.getName());
+        }
         return vo;
     }
 }

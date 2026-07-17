@@ -5,6 +5,7 @@
         <el-date-picker v-model="searchForm.date" type="date" value-format="YYYY-MM-DD" placeholder="请选择日期" />
         <el-button type="primary" @click="loadData">查询</el-button>
         <el-button @click="handleReset">重置</el-button>
+        <el-button v-permission="'attendance:report:export'" @click="handleExport">导出报表</el-button>
       </div>
       <el-table :data="tableData" v-loading="loading">
         <el-table-column prop="employeeId" label="ID" width="60" />

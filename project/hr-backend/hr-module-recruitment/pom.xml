@@ -28,5 +28,9 @@
             <groupId>com.hr</groupId>
             <artifactId>hr-module-system</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.hr</groupId>
+            <artifactId>hr-module-employee</artifactId>
+        </dependency>
     </dependencies>
 </project>

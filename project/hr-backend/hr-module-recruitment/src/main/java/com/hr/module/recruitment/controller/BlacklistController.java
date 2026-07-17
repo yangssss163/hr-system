@@ -25,8 +25,16 @@ public class BlacklistController {
     @PreAuthorize("hasAuthority('recruitment:blacklist:list')")
     public Result<IPage<BlacklistVO>> list(
             @RequestParam(required = false, defaultValue = "1") Integer page,
-            @RequestParam(required = false, defaultValue = "10") Integer pageSize) {
-        return Result.success(recBlacklistService.page(page, pageSize));
+            @RequestParam(required = false, defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) String keyword) {
+        return Result.success(recBlacklistService.page(page, pageSize, keyword));
+    }
+
+    @Operation(summary = "黑名单详情")
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('recruitment:blacklist:list')")
+    public Result<BlacklistVO> detail(@PathVariable Long id) {
+        return Result.success(recBlacklistService.getById(id));
     }
 
     @Operation(summary = "加入黑名单")

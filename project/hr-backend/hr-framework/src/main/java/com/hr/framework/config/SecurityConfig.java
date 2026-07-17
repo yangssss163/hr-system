@@ -30,16 +30,14 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
                     "/api/auth/login",
+                    "/api/auth/register",
                     "/doc.html",
                     "/webjars/**",
                     "/v3/api-docs/**",
-                    "/swagger-resources/**",
-                    "/",
-                    "/index.html",
-                    "/assets/**",
-                    "/*.ico"
+                    "/swagger-resources/**"
                 ).permitAll()
-                .anyRequest().authenticated()
+                .requestMatchers("/api/**").authenticated()
+                .anyRequest().permitAll()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

@@ -2,7 +2,7 @@
   <div class="role-manage">
     <el-card>
       <div class="toolbar">
-        <el-button type="primary" @click="handleAdd">
+        <el-button v-permission="'system:role:create'" type="primary" @click="handleAdd">
           <el-icon><Plus /></el-icon>新增角色
         </el-button>
       </div>
@@ -18,10 +18,11 @@
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" width="180" />
-        <el-table-column label="操作" width="200">
+        <el-table-column label="操作" width="280">
           <template #default="{ row }">
-            <el-button size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button v-permission="'system:role:update'" size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-permission="'system:role:update'" size="small" type="warning" @click="handlePerm(row)">权限</el-button>
+            <el-button v-permission="'system:role:delete'" size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -80,10 +81,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
-import { getRoleList, createRole, updateRole, deleteRole, assignMenus } from '@/api/system/role'
+import { getRoleList, getRoleById, createRole, updateRole, deleteRole, assignMenus } from '@/api/system/role'
 import { getMenuTree } from '@/api/system/menu'
 import type { Role, RoleForm, Menu } from '@/api/types'
 
@@ -95,6 +96,7 @@ const formRef = ref()
 const menuTreeRef = ref()
 const isEdit = ref(false)
 const editId = ref(0)
+const currentRoleId = ref(0)
 
 const pagination = reactive({
   current: 1,
@@ -176,12 +178,23 @@ const handleSubmit = async () => {
   })
 }
 
+const handlePerm = async (row: Role) => {
+  currentRoleId.value = row.id
+  await loadMenu()
+  const res = await getRoleById(row.id)
+  const menuIds = res.data.menuIds || []
+  permDialogVisible.value = true
+  await nextTick()
+  menuTreeRef.value?.setCheckedKeys(menuIds)
+}
+
 const handleSavePerm = async () => {
   if (!menuTreeRef.value) return
   const checkedKeys = menuTreeRef.value.getCheckedKeys()
-  await assignMenus(editId.value, { menuIds: checkedKeys })
+  await assignMenus(currentRoleId.value, { menuIds: checkedKeys })
   ElMessage.success('权限配置成功')
   permDialogVisible.value = false
+  loadData()
 }
 
 const dialogTitle = computed(() => isEdit.value ? '编辑角色' : '新增角色')

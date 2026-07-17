@@ -2,7 +2,7 @@
   <div class="company-manage">
     <el-card>
       <div class="toolbar">
-        <el-button type="primary" @click="handleAdd">
+        <el-button v-permission="'system:company:create'" type="primary" @click="handleAdd">
           <el-icon><Plus /></el-icon>新增公司
         </el-button>
       </div>
@@ -18,8 +18,8 @@
           <span class="custom-tree-node">
             <span>{{ node.label }}</span>
             <span class="node-actions">
-              <el-button size="small" @click.stop="handleEdit(data)">编辑</el-button>
-              <el-button size="small" type="danger" @click.stop="handleDelete(data)">删除</el-button>
+              <el-button v-permission="'system:company:update'" size="small" @click.stop="handleEdit(data)">编辑</el-button>
+              <el-button v-permission="'system:company:delete'" size="small" type="danger" @click.stop="handleDelete(data)">删除</el-button>
             </span>
           </span>
         </template>
@@ -35,14 +35,16 @@
           <el-input v-model="form.code" placeholder="请输入公司编码" />
         </el-form-item>
         <el-form-item label="上级公司">
-          <el-select v-model="form.parentId" placeholder="请选择上级公司" clearable>
-            <el-option
-              v-for="item in flatTreeOptions"
-              :key="item.id"
-              :label="item.label"
-              :value="item.id"
-            />
-          </el-select>
+          <el-tree-select
+            v-model="form.parentId"
+            :data="treeOptions"
+            :props="{ label: 'name', children: 'children', value: 'id' }"
+            placeholder="请选择上级公司"
+            clearable
+            check-strictly
+            filterable
+            style="width: 100%"
+          />
         </el-form-item>
         <el-form-item label="排序">
           <el-input-number v-model="form.sort" :min="0" :max="999" />
@@ -94,20 +96,16 @@ const rules = {
   code: [{ required: true, message: '请输入公司编码', trigger: 'blur' }]
 }
 
-const flatTreeOptions = computed(() => {
-  const result: { id: number; label: string }[] = []
-  const traverse = (nodes: Company[], prefix = '') => {
-    nodes.forEach(node => {
-      if (node.id !== editId.value) {
-        result.push({ id: node.id, label: `${prefix}${node.name}` })
-      }
-      if (node.children && node.children.length) {
-        traverse(node.children, prefix + '　└─ ')
-      }
-    })
+const treeOptions = computed(() => {
+  const filterNode = (nodes: Company[]): Company[] => {
+    return nodes
+      .filter(node => node.id !== editId.value)
+      .map(node => ({
+        ...node,
+        children: node.children ? filterNode(node.children) : []
+      }))
   }
-  traverse(treeData.value)
-  return result
+  return filterNode(treeData.value)
 })
 
 const dialogTitle = computed(() => isEdit.value ? '编辑公司' : '新增公司')

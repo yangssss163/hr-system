@@ -7,8 +7,12 @@ import com.hr.module.crm.dto.CrmPaymentDTO;
 import com.hr.module.crm.dto.CrmPaymentQuery;
 import com.hr.module.crm.dto.CrmPaymentVO;
 import com.hr.module.crm.entity.CrmPayment;
+import com.hr.module.crm.entity.CrmCustomer;
 import com.hr.module.crm.mapper.CrmPaymentMapper;
+import com.hr.module.crm.mapper.CrmCustomerMapper;
 import com.hr.module.crm.service.CrmPaymentService;
+import com.hr.module.employee.entity.HrEmployee;
+import com.hr.module.employee.mapper.HrEmployeeMapper;
 import com.hr.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +25,8 @@ import java.time.LocalDate;
 public class CrmPaymentServiceImpl implements CrmPaymentService {
 
     private final CrmPaymentMapper crmPaymentMapper;
+    private final CrmCustomerMapper crmCustomerMapper;
+    private final HrEmployeeMapper hrEmployeeMapper;
 
     @Override
     public IPage<CrmPaymentVO> page(CrmPaymentQuery query) {
@@ -112,6 +118,14 @@ public class CrmPaymentServiceImpl implements CrmPaymentService {
         vo.setOwnerId(entity.getOwnerId());
         vo.setRemark(entity.getRemark());
         vo.setCreateTime(entity.getCreateTime());
+        if (entity.getCustomerId() != null) {
+            CrmCustomer customer = crmCustomerMapper.selectById(entity.getCustomerId());
+            if (customer != null) vo.setCustomerName(customer.getName());
+        }
+        if (entity.getOwnerId() != null) {
+            HrEmployee emp = hrEmployeeMapper.selectById(entity.getOwnerId());
+            if (emp != null) vo.setOwnerName(emp.getName());
+        }
         return vo;
     }
 }

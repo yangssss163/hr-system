@@ -1,8 +1,12 @@
 import http from './http'
-import type { LoginRequest, LoginResponse, UserInfo, Menu, ChangePasswordRequest } from './types'
+import type { LoginRequest, LoginResponse, UserInfo, Menu, ChangePasswordRequest, RegisterRequest } from './types'
 
 export const login = (data: LoginRequest) => {
   return http.post<LoginResponse>('/auth/login', data)
+}
+
+export const register = (data: RegisterRequest) => {
+  return http.post('/auth/register', data)
 }
 
 export const logout = () => {

@@ -19,7 +19,7 @@
 
     <el-card>
       <div class="toolbar">
-        <el-button type="primary" @click="handleAdd">
+        <el-button v-permission="'system:position:create'" type="primary" @click="handleAdd">
           <el-icon><Plus /></el-icon>新增职位
         </el-button>
       </div>
@@ -37,8 +37,8 @@
         <el-table-column prop="createTime" label="创建时间" width="180" />
         <el-table-column label="操作" width="200">
           <template #default="{ row }">
-            <el-button size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button v-permission="'system:position:update'" size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-permission="'system:position:delete'" size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

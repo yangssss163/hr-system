@@ -5,10 +5,10 @@
         <el-select v-model="moduleFilter" placeholder="按模块筛选" clearable @change="loadData">
           <el-option v-for="(label, key) in entityTypeMap" :key="key" :label="label" :value="key" />
         </el-select>
-        <el-button type="primary" @click="handleAddRow">
+        <el-button v-permission="'system:field:create'" type="primary" @click="handleAddRow">
           <el-icon><Plus /></el-icon>新增行
         </el-button>
-        <el-button type="success" @click="handleSaveAll" :disabled="!hasChanges">
+        <el-button type="success" v-permission="'system:field:update'" @click="handleSaveAll" :disabled="!hasChanges">
           批量保存
         </el-button>
       </div>
@@ -59,7 +59,7 @@
         </el-table-column>
         <el-table-column label="操作" width="80">
           <template #default="{ $index }">
-            <el-button size="small" type="danger" @click="handleRemoveRow($index)">删除</el-button>
+            <el-button v-permission="'system:field:delete'" size="small" type="danger" @click="handleRemoveRow($index)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

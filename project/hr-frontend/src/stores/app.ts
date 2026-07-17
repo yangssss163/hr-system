@@ -8,7 +8,7 @@ interface TagItem {
 
 export const useAppStore = defineStore('app', {
   state: () => ({
-    sidebarCollapsed: false,
+    sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true',
     activeMenu: '',
     activeSubMenu: '',
     tagsViewList: [] as TagItem[]
@@ -17,6 +17,7 @@ export const useAppStore = defineStore('app', {
   actions: {
     toggleSidebar() {
       this.sidebarCollapsed = !this.sidebarCollapsed
+      localStorage.setItem('sidebarCollapsed', String(this.sidebarCollapsed))
     },
 
     addTagView(tag: TagItem) {

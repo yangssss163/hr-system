@@ -3,11 +3,14 @@ package com.hr.module.salary.dto;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 
 @Data
 public class SalSheetVO {
     private Long id;
     private Long employeeId;
+    private String month;
     private String empNo;
     private String employeeName;
     private String deptName;
@@ -20,4 +23,7 @@ public class SalSheetVO {
     private BigDecimal tax;
     private BigDecimal totalDeduction;
     private BigDecimal netSalary;
+    private Integer status;
+    // 自定义字段列表 [{name, code, type, value}]
+    private List<Map<String, Object>> customFields;
 }

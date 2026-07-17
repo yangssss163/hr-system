@@ -18,6 +18,10 @@ instance.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
+    // FormData 上传时删除 Content-Type，让浏览器自动设置 multipart/form-data + boundary
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type']
+    }
     return config
   },
   (error) => {
@@ -45,21 +49,29 @@ const request = async <T = any>(
       headers: config?.headers
     })
     const res = response.data as ApiResponse<T>
+    // 兼容后端未用 Result<> 包装的响应（如 workflow 模块部分接口）
+    if (res.code === undefined && response.status === 200) {
+      return { code: 200, message: '成功', data: res as unknown as T }
+    }
     if (res.code !== 200) {
       ElMessage.error(res.message || '请求失败')
       if (res.code === 401 || res.code === 1003) {
         localStorage.removeItem('token')
         localStorage.removeItem('userInfo')
-        window.location.href = '/login'
       }
-      throw new Error(res.message || 'Error')
+      const err = new Error(res.message || 'Error') as any
+      err.isAuthError = true
+      throw err
     }
     return res
   } catch (error: any) {
+    if (error.isAuthError) throw error
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('userInfo')
-      window.location.href = '/login'
+      const err = new Error(error.response?.data?.message || '认证已过期') as any
+      err.isAuthError = true
+      throw err
     }
     if (error.response) {
       const message = error.response?.data?.message || '网络错误'

@@ -7,8 +7,12 @@ import com.hr.module.crm.dto.CrmRefundDTO;
 import com.hr.module.crm.dto.CrmRefundQuery;
 import com.hr.module.crm.dto.CrmRefundVO;
 import com.hr.module.crm.entity.CrmRefund;
+import com.hr.module.crm.entity.CrmCustomer;
 import com.hr.module.crm.mapper.CrmRefundMapper;
+import com.hr.module.crm.mapper.CrmCustomerMapper;
 import com.hr.module.crm.service.CrmRefundService;
+import com.hr.module.employee.entity.HrEmployee;
+import com.hr.module.employee.mapper.HrEmployeeMapper;
 import com.hr.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +25,8 @@ import java.time.LocalDate;
 public class CrmRefundServiceImpl implements CrmRefundService {
 
     private final CrmRefundMapper crmRefundMapper;
+    private final CrmCustomerMapper crmCustomerMapper;
+    private final HrEmployeeMapper hrEmployeeMapper;
 
     @Override
     public IPage<CrmRefundVO> page(CrmRefundQuery query) {
@@ -109,6 +115,14 @@ public class CrmRefundServiceImpl implements CrmRefundService {
         vo.setStatus(entity.getStatus());
         vo.setOwnerId(entity.getOwnerId());
         vo.setCreateTime(entity.getCreateTime());
+        if (entity.getCustomerId() != null) {
+            CrmCustomer customer = crmCustomerMapper.selectById(entity.getCustomerId());
+            if (customer != null) vo.setCustomerName(customer.getName());
+        }
+        if (entity.getOwnerId() != null) {
+            HrEmployee emp = hrEmployeeMapper.selectById(entity.getOwnerId());
+            if (emp != null) vo.setOwnerName(emp.getName());
+        }
         return vo;
     }
 }

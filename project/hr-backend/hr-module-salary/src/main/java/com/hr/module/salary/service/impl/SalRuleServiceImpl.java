@@ -52,15 +52,17 @@ public class SalRuleServiceImpl implements SalRuleService {
     }
 
     private String getTypeName(String type) {
-        if ("base_salary".equals(type)) {
-            return "地区基本工资";
-        }
-        if ("social_insurance".equals(type)) {
-            return "社保";
-        }
-        if ("tax".equals(type)) {
-            return "个税";
-        }
+        if ("base_salary".equals(type)) return "基本工资基数";
+        if ("social_insurance".equals(type)) return "社保个人缴纳比例";
+        if ("tax_threshold".equals(type)) return "个税起征点";
+        if ("tax_rate".equals(type)) return "综合所得税率";
+        if ("overtime_rate".equals(type)) return "工作日加班费率";
+        if ("overtime_weekend".equals(type)) return "周末加班费率";
+        if ("subsidy_default".equals(type)) return "默认岗位补贴";
+        if ("pension".equals(type)) return "养老保险个人比例";
+        if ("medical".equals(type)) return "医疗保险个人比例";
+        if ("unemployment".equals(type)) return "失业保险个人比例";
+        if ("housing_fund".equals(type)) return "公积金个人比例";
         return type;
     }
 }

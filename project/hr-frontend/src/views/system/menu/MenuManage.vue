@@ -2,7 +2,7 @@
   <div class="menu-manage">
     <el-card>
       <div class="toolbar">
-        <el-button type="primary" @click="handleAdd">
+        <el-button v-permission="'system:menu:create'" type="primary" @click="handleAdd">
           <el-icon><Plus /></el-icon>新增菜单
         </el-button>
       </div>
@@ -17,9 +17,9 @@
           <span class="custom-tree-node">
             <span>{{ node.label }}</span>
             <span class="node-actions">
-              <el-button size="small" @click.stop="handleAddChild(data)">添加子菜单</el-button>
-              <el-button size="small" @click.stop="handleEdit(data)">编辑</el-button>
-              <el-button size="small" type="danger" @click.stop="handleDelete(data)">删除</el-button>
+              <el-button v-permission="'system:menu:create'" size="small" @click.stop="handleAddChild(data)">添加子菜单</el-button>
+              <el-button v-permission="'system:menu:update'" size="small" @click.stop="handleEdit(data)">编辑</el-button>
+              <el-button v-permission="'system:menu:delete'" size="small" type="danger" @click.stop="handleDelete(data)">删除</el-button>
             </span>
           </span>
         </template>
@@ -32,9 +32,16 @@
           <el-input v-model="form.name" placeholder="请输入菜单名称" />
         </el-form-item>
         <el-form-item label="上级菜单">
-          <el-select v-model="form.parentId" placeholder="请选择上级菜单" clearable>
-            <el-option v-for="item in menuOptions" :key="item.id" :label="item.label" :value="item.id" />
-          </el-select>
+          <el-tree-select
+            v-model="form.parentId"
+            :data="menuOptions"
+            :props="{ label: 'name', children: 'children', value: 'id' }"
+            placeholder="请选择上级菜单"
+            clearable
+            check-strictly
+            filterable
+            style="width: 100%"
+          />
         </el-form-item>
         <el-form-item label="菜单类型">
           <el-radio-group v-model="form.type">
@@ -110,19 +117,15 @@ const rules = {
 }
 
 const menuOptions = computed(() => {
-  const result: { id: number; label: string }[] = []
-  const traverse = (nodes: Menu[], prefix = '') => {
-    nodes.forEach(node => {
-      if (node.id !== editId.value) {
-        result.push({ id: node.id, label: `${prefix}${node.name}` })
-      }
-      if (node.children && node.children.length) {
-        traverse(node.children, prefix + '　└─ ')
-      }
-    })
+  const filterNode = (nodes: Menu[]): Menu[] => {
+    return nodes
+      .filter(node => node.id !== editId.value)
+      .map(node => ({
+        ...node,
+        children: node.children ? filterNode(node.children) : []
+      }))
   }
-  traverse(treeData.value)
-  return result
+  return filterNode(treeData.value)
 })
 
 const dialogTitle = computed(() => isEdit.value ? '编辑菜单' : '新增菜单')

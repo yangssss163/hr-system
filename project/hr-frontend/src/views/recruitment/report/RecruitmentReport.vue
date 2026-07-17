@@ -36,24 +36,15 @@
     </el-row>
     <el-row :gutter="20" style="margin-top: 20px;">
       <el-col :span="12">
-        <el-card title="渠道统计">
-          <el-table :data="report.channelStats">
-            <el-table-column prop="channel" label="渠道" />
-            <el-table-column prop="count" label="数量" />
-            <el-table-column prop="rate" label="占比">
-              <template #default="{ row }">{{ row.rate }}%</template>
-            </el-table-column>
-          </el-table>
+        <el-card>
+          <template #header><span>渠道统计</span></template>
+          <div ref="channelChartRef" class="chart-container"></div>
         </el-card>
       </el-col>
       <el-col :span="12">
-        <el-card title="月度统计">
-          <el-table :data="report.monthlyStats">
-            <el-table-column prop="month" label="月份" />
-            <el-table-column prop="resumes" label="简历数" />
-            <el-table-column prop="interviews" label="面试数" />
-            <el-table-column prop="hired" label="入职数" />
-          </el-table>
+        <el-card>
+          <template #header><span>月度趋势</span></template>
+          <div ref="monthlyChartRef" class="chart-container"></div>
         </el-card>
       </el-col>
     </el-row>
@@ -61,7 +52,8 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, onMounted } from 'vue'
+import { reactive, ref, onMounted, nextTick } from 'vue'
+import * as echarts from 'echarts'
 import { recruitmentReportApi } from '@/api/modules/recruitment'
 import type { RecruitmentReport } from '@/api/types'
 
@@ -69,13 +61,55 @@ const report = reactive<RecruitmentReport>({
   totalResumes: 0, totalInterviews: 0, totalPassed: 0, totalHired: 0, conversionRate: 0,
   channelStats: [], monthlyStats: []
 })
+const channelChartRef = ref()
+const monthlyChartRef = ref()
+let channelChart: echarts.ECharts | null = null
+let monthlyChart: echarts.ECharts | null = null
+
+const renderChannelChart = () => {
+  if (!channelChartRef.value || report.channelStats.length === 0) return
+  if (channelChart) channelChart.dispose()
+  channelChart = echarts.init(channelChartRef.value)
+  channelChart.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+    series: [{
+      type: 'pie',
+      radius: ['40%', '70%'],
+      center: ['50%', '55%'],
+      data: report.channelStats.map(c => ({ name: c.channel, value: c.count })),
+      label: { formatter: '{b}\n{d}%' }
+    }]
+  })
+}
+
+const renderMonthlyChart = () => {
+  if (!monthlyChartRef.value || report.monthlyStats.length === 0) return
+  if (monthlyChart) monthlyChart.dispose()
+  monthlyChart = echarts.init(monthlyChartRef.value)
+  monthlyChart.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['简历数', '面试数', '入职数'], bottom: 0 },
+    xAxis: { type: 'category', data: report.monthlyStats.map(m => m.month) },
+    yAxis: { type: 'value' },
+    series: [
+      { name: '简历数', type: 'bar', data: report.monthlyStats.map(m => m.resumes), itemStyle: { color: '#3b82f6' } },
+      { name: '面试数', type: 'bar', data: report.monthlyStats.map(m => m.interviews), itemStyle: { color: '#f59e0b' } },
+      { name: '入职数', type: 'line', smooth: true, data: report.monthlyStats.map(m => m.hired), itemStyle: { color: '#10b981' } }
+    ],
+    grid: { left: '8%', right: '5%', bottom: '15%', top: '10%' }
+  })
+}
 
 const loadData = async () => {
   const res = await recruitmentReportApi.summary()
   Object.assign(report, res.data)
+  await nextTick()
+  renderChannelChart()
+  renderMonthlyChart()
 }
 
 onMounted(() => loadData())
+onMounted(() => window.addEventListener('resize', () => { channelChart?.resize(); monthlyChart?.resize() }))
 </script>
 
 <style lang="scss" scoped>
@@ -85,5 +119,6 @@ onMounted(() => loadData())
     .stat-label { color: #999; font-size: 14px; margin-bottom: 8px; }
     .stat-value { font-size: 28px; font-weight: bold; color: #409eff; }
   }
+  .chart-container { width: 100%; height: 320px; }
 }
 </style>

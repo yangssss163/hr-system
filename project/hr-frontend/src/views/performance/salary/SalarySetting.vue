@@ -2,7 +2,7 @@
   <div class="salary-setting">
     <el-card>
       <div class="toolbar">
-        <el-button type="primary" @click="handleAdd">创建设置</el-button>
+        <el-button v-permission="'performance:salary:create'" type="primary" @click="handleAdd">创建设置</el-button>
       </div>
       <el-table :data="tableData" v-loading="loading">
         <el-table-column prop="id" label="ID" width="60" />
@@ -13,8 +13,8 @@
         <el-table-column prop="sort" label="排序" width="80" />
         <el-table-column label="操作" width="150">
           <template #default="{ row }">
-            <el-button size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button v-permission="'performance:salary:update'" size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-permission="'performance:salary:delete'" size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

@@ -5,7 +5,7 @@
         <el-select v-model="currentYear" style="width: 120px">
           <el-option v-for="y in years" :key="y" :label="y + '年'" :value="y" />
         </el-select>
-        <el-button type="primary" @click="handleAdd">创建假期</el-button>
+        <el-button v-permission="'attendance:holiday:create'" type="primary" @click="handleAdd">创建假期</el-button>
       </div>
       <el-table :data="tableData" v-loading="loading">
         <el-table-column prop="id" label="ID" width="60" />
@@ -14,9 +14,9 @@
         <el-table-column prop="days" label="天数" width="80" />
         <el-table-column label="操作" width="200">
           <template #default="{ row }">
-            <el-button size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button size="small" @click="handleCopy(row)">复制</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button v-permission="'attendance:holiday:update'" size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-permission="'attendance:holiday:create'" size="small" @click="handleCopy(row)">复制</el-button>
+            <el-button v-permission="'attendance:holiday:delete'" size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

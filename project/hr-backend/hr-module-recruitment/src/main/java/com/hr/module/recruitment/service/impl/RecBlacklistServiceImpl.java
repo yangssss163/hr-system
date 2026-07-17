@@ -1,5 +1,6 @@
 package com.hr.module.recruitment.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hr.common.enums.ResultCode;
@@ -23,16 +24,34 @@ public class RecBlacklistServiceImpl implements RecBlacklistService {
     private final RecBlacklistMapper recBlacklistMapper;
 
     @Override
-    public IPage<BlacklistVO> page(Integer pageNum, Integer pageSize) {
+    public IPage<BlacklistVO> page(Integer pageNum, Integer pageSize, String keyword) {
+        LambdaQueryWrapper<RecBlacklist> wrapper = new LambdaQueryWrapper<>();
+        if (keyword != null && !keyword.isBlank()) {
+            wrapper.and(w -> w
+                    .like(RecBlacklist::getName, keyword)
+                    .or()
+                    .like(RecBlacklist::getPhone, keyword)
+                    .or()
+                    .like(RecBlacklist::getIdCard, keyword)
+            );
+        }
+        wrapper.orderByDesc(RecBlacklist::getCreateTime);
         Page<RecBlacklist> page = new Page<>(pageNum != null ? pageNum : 1, pageSize != null ? pageSize : 10);
-        Page<RecBlacklist> result = recBlacklistMapper.selectPage(page,
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<RecBlacklist>()
-                        .orderByDesc(RecBlacklist::getCreateTime));
+        Page<RecBlacklist> result = recBlacklistMapper.selectPage(page, wrapper);
 
         List<BlacklistVO> voList = result.getRecords().stream().map(this::toVO).collect(Collectors.toList());
         Page<BlacklistVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
         voPage.setRecords(voList);
         return voPage;
+    }
+
+    @Override
+    public BlacklistVO getById(Long id) {
+        RecBlacklist entity = recBlacklistMapper.selectById(id);
+        if (entity == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "黑名单记录不存在");
+        }
+        return toVO(entity);
     }
 
     @Override

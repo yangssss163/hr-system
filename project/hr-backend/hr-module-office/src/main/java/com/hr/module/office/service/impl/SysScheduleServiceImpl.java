@@ -10,6 +10,8 @@ import com.hr.module.office.dto.SysScheduleVO;
 import com.hr.module.office.entity.SysSchedule;
 import com.hr.module.office.mapper.SysScheduleMapper;
 import com.hr.module.office.service.SysScheduleService;
+import com.hr.module.system.entity.SysUser;
+import com.hr.module.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -19,6 +21,7 @@ import org.springframework.util.StringUtils;
 public class SysScheduleServiceImpl implements SysScheduleService {
 
     private final SysScheduleMapper sysScheduleMapper;
+    private final SysUserMapper sysUserMapper;
 
     @Override
     public IPage<SysScheduleVO> page(SysScheduleQuery query) {
@@ -29,10 +32,10 @@ public class SysScheduleServiceImpl implements SysScheduleService {
         if (query.getUserId() != null) {
             wrapper.eq(SysSchedule::getUserId, query.getUserId());
         }
-        if (query.getStartTime() != null) {
+        if (StringUtils.hasText(query.getStartTime())) {
             wrapper.ge(SysSchedule::getStartTime, query.getStartTime());
         }
-        if (query.getEndTime() != null) {
+        if (StringUtils.hasText(query.getEndTime())) {
             wrapper.le(SysSchedule::getEndTime, query.getEndTime());
         }
         wrapper.orderByDesc(SysSchedule::getCreateTime);
@@ -88,6 +91,10 @@ public class SysScheduleServiceImpl implements SysScheduleService {
         SysScheduleVO vo = new SysScheduleVO();
         vo.setId(entity.getId());
         vo.setUserId(entity.getUserId());
+        if (entity.getUserId() != null) {
+            SysUser user = sysUserMapper.selectById(entity.getUserId());
+            if (user != null) vo.setUserName(user.getRealName());
+        }
         vo.setTitle(entity.getTitle());
         vo.setContent(entity.getContent());
         vo.setStartTime(entity.getStartTime());

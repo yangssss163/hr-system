@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -23,10 +24,11 @@ public class ExcelUtils {
             response.setHeader("Content-Disposition",
                     "attachment;filename=" + encodedName + ".xlsx");
 
+            List<T> safeData = data != null ? data : new ArrayList<>();
             EasyExcel.write(response.getOutputStream(), clazz)
                     .excelType(ExcelTypeEnum.XLSX)
                     .sheet(sheetName)
-                    .doWrite(data);
+                    .doWrite(safeData);
         } catch (IOException e) {
             log.error("Excel 导出失败", e);
             throw new RuntimeException("Excel 导出失败");

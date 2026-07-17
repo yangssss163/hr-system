@@ -22,7 +22,7 @@ public class RuleController {
     private final SalRuleService salRuleService;
 
     @Operation(summary = "规则列表")
-    @GetMapping("/")
+    @GetMapping
     @PreAuthorize("hasAuthority('salary:rule:list')")
     public Result<List<SalRuleVO>> list() {
         return Result.success(salRuleService.list());

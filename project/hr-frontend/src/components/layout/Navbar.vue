@@ -2,7 +2,7 @@
   <div class="navbar">
     <div class="navbar-left">
       <el-button
-        type="text"
+        link
         class="toggle-btn"
         @click="appStore.toggleSidebar"
       >
@@ -12,16 +12,9 @@
     </div>
     
     <div class="navbar-right">
-      <el-dropdown trigger="click">
-        <span class="user-info">
-          <el-icon :size="18"><Bell /></el-icon>
-        </span>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item>暂无消息</el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
+      <HeaderNotice />
+      <HeaderMessage />
+      <HeaderTask />
       
       <el-dropdown trigger="click">
         <span class="user-info">
@@ -53,7 +46,7 @@
       </el-form>
       <template #footer>
         <el-button @click="passwordDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitChangePassword">确认修改</el-button>
+        <el-button type="primary" @click="submitChangePassword" :loading="submittingPassword">确认修改</el-button>
       </template>
     </el-dialog>
   </div>
@@ -63,13 +56,18 @@
 import { ref, reactive } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useAppStore } from '@/stores/app'
-import { Menu, Bell, User, ArrowDown } from '@element-plus/icons-vue'
+import { Menu, User, ArrowDown } from '@element-plus/icons-vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
+import { changePassword } from '@/api/auth'
+import HeaderNotice from '@/components/office/HeaderNotice.vue'
+import HeaderMessage from '@/components/office/HeaderMessage.vue'
+import HeaderTask from '@/components/office/HeaderTask.vue'
 import Breadcrumb from './Breadcrumb.vue'
 
 const userStore = useUserStore()
 const appStore = useAppStore()
 
+// ===== 修改密码 =====
 const passwordDialogVisible = ref(false)
 const passwordFormRef = ref<FormInstance>()
 
@@ -108,17 +106,22 @@ const handleChangePassword = () => {
   passwordDialogVisible.value = true
 }
 
+const submittingPassword = ref(false)
+
 const submitChangePassword = async () => {
   if (!passwordFormRef.value) return
   await passwordFormRef.value.validate(async (valid) => {
-    if (valid) {
-      try {
-        // TODO: 调用修改密码 API
-        ElMessage.success('密码修改成功')
-        passwordDialogVisible.value = false
-      } catch {
-        ElMessage.error('密码修改失败')
-      }
+    if (!valid) return
+    submittingPassword.value = true
+    try {
+      await changePassword({ oldPassword: passwordForm.oldPassword, newPassword: passwordForm.newPassword })
+      ElMessage.success('密码修改成功，请重新登录')
+      passwordDialogVisible.value = false
+      userStore.logout()
+    } catch {
+      ElMessage.error('密码修改失败，请检查原密码是否正确')
+    } finally {
+      submittingPassword.value = false
     }
   })
 }

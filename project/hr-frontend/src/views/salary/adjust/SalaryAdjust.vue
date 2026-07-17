@@ -2,7 +2,7 @@
   <div class="salary-adjust">
     <el-card>
       <div class="toolbar">
-        <el-button type="primary" @click="handleAdd">员工调薪</el-button>
+        <el-button v-permission="'salary:adjust:create'" type="primary" @click="handleAdd">员工调薪</el-button>
       </div>
       <el-table :data="tableData" v-loading="loading">
         <el-table-column prop="id" label="ID" width="60" />
@@ -27,7 +27,7 @@
     </el-card>
     <el-dialog v-model="dialogVisible" title="员工调薪" width="500px">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="120px">
-        <el-form-item label="员工" prop="employeeId"><el-select v-model="form.employeeId"><el-option label="选择员工" :value="0" /></el-select></el-form-item>
+        <el-form-item label="员工" prop="employeeId"><el-select v-model="form.employeeId" filterable placeholder="搜索员工"><el-option v-for="e in employeeList" :key="e.id" :label="`${e.empNo} - ${e.name}`" :value="e.id" /></el-select></el-form-item>
         <el-form-item label="调薪后金额" prop="afterSalary"><el-input-number v-model="form.afterSalary" :min="0" :max="999999" style="width: 100%" /></el-form-item>
         <el-form-item label="调薪类型" prop="adjustType"><el-select v-model="form.adjustType"><el-option label="晋升调薪" value="promote" /><el-option label="调岗调薪" value="transfer" /><el-option label="年度调薪" value="annual" /><el-option label="特殊调薪" value="special" /></el-select></el-form-item>
         <el-form-item label="生效日期" prop="effectiveDate"><el-date-picker v-model="form.effectiveDate" type="date" value-format="yyyy-MM-dd" /></el-form-item>
@@ -45,7 +45,8 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { salaryAdjustApi } from '@/api/modules/salary'
-import type { SalaryAdjust, SalaryAdjustForm } from '@/api/types'
+import { getEmployeeList } from '@/api/modules/employee'
+import type { SalaryAdjust, SalaryAdjustForm, Employee } from '@/api/types'
 
 const tableData = ref<SalaryAdjust[]>([])
 const loading = ref(false)
@@ -53,6 +54,7 @@ const dialogVisible = ref(false)
 const formRef = ref()
 
 const pagination = reactive({ page: 1, pageSize: 10, total: 0 })
+const employeeList = ref<Employee[]>([])
 const form = reactive<SalaryAdjustForm>({ employeeId: 0, afterSalary: 0, adjustType: 'annual', effectiveDate: '', remark: '' })
 const rules = { employeeId: [{ required: true, message: '请选择员工', trigger: 'blur' }], afterSalary: [{ required: true, message: '请输入调薪后金额', trigger: 'blur' }], adjustType: [{ required: true, message: '请选择调薪类型', trigger: 'blur' }], effectiveDate: [{ required: true, message: '请选择生效日期', trigger: 'blur' }] }
 
@@ -65,7 +67,9 @@ const loadData = async () => {
   } finally { loading.value = false }
 }
 
-const handleAdd = () => { Object.assign(form, { employeeId: 0, afterSalary: 0, adjustType: 'annual', effectiveDate: '', remark: '' }); dialogVisible.value = true }
+const loadEmployees = async () => { try { const res = await getEmployeeList({ page: 1, pageSize: 200 }); employeeList.value = (res.data.records || []).filter((e: Employee) => e.status === 1) } catch { /* ignore */ } }
+
+const handleAdd = () => { Object.assign(form, { employeeId: 0, afterSalary: 0, adjustType: 'annual', effectiveDate: '', remark: '' }); loadEmployees(); dialogVisible.value = true }
 
 const handleSubmit = async () => {
   await formRef.value?.validate(async (valid: boolean) => {

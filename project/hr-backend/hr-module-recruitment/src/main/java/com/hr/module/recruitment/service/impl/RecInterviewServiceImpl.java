@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hr.common.enums.ResultCode;
 import com.hr.common.exception.BusinessException;
+import com.hr.module.employee.entity.HrEmployee;
+import com.hr.module.employee.mapper.HrEmployeeMapper;
 import com.hr.module.recruitment.dto.*;
 import com.hr.module.recruitment.entity.RecInterview;
 import com.hr.module.recruitment.entity.RecResume;
@@ -14,10 +16,12 @@ import com.hr.module.recruitment.service.RecInterviewService;
 import com.hr.module.system.entity.SysUser;
 import com.hr.module.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,6 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class RecInterviewServiceImpl implements RecInterviewService {
@@ -32,6 +37,7 @@ public class RecInterviewServiceImpl implements RecInterviewService {
     private final RecInterviewMapper recInterviewMapper;
     private final RecResumeMapper recResumeMapper;
     private final SysUserMapper sysUserMapper;
+    private final HrEmployeeMapper hrEmployeeMapper;
 
     @Override
     public IPage<InterviewVO> page(InterviewQuery query) {
@@ -47,6 +53,11 @@ public class RecInterviewServiceImpl implements RecInterviewService {
         }
         if (StringUtils.hasText(query.getInterviewDateEnd())) {
             wrapper.le(RecInterview::getInterviewTime, LocalDateTime.parse(query.getInterviewDateEnd() + "T23:59:59"));
+        }
+        // 关键词搜索：通过 EXISTS 子查询在 SQL 层 JOIN rec_resume 过滤
+        if (StringUtils.hasText(query.getKeyword())) {
+            wrapper.exists("SELECT 1 FROM rec_resume r WHERE r.id = rec_interview.resume_id AND r.name LIKE CONCAT('%', {0}, '%')",
+                    query.getKeyword());
         }
         wrapper.orderByDesc(RecInterview::getCreateTime);
 
@@ -66,19 +77,7 @@ public class RecInterviewServiceImpl implements RecInterviewService {
                 sysUserMapper.selectBatchIds(interviewerIds).stream()
                         .collect(Collectors.toMap(SysUser::getId, SysUser::getRealName));
 
-        // 过滤关键词
-        List<RecInterview> records = result.getRecords();
-        if (StringUtils.hasText(query.getKeyword())) {
-            String keyword = query.getKeyword();
-            records = records.stream()
-                    .filter(i -> {
-                        RecResume r = resumeMap.get(i.getResumeId());
-                        return r != null && r.getName() != null && r.getName().contains(keyword);
-                    })
-                    .collect(Collectors.toList());
-        }
-
-        List<InterviewVO> voList = records.stream()
+        List<InterviewVO> voList = result.getRecords().stream()
                 .map(i -> toVO(i, resumeMap, interviewerNameMap))
                 .collect(Collectors.toList());
 
@@ -145,7 +144,8 @@ public class RecInterviewServiceImpl implements RecInterviewService {
         if (entity == null) {
             throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "面试记录不存在");
         }
-        // 签到暂不做状态变更，仅记录
+        entity.setCheckinTime(LocalDateTime.now());
+        recInterviewMapper.updateById(entity);
     }
 
     @Override
@@ -202,23 +202,34 @@ public class RecInterviewServiceImpl implements RecInterviewService {
     @Override
     @Transactional
     public void offer(Long id, InterviewOfferDTO dto) {
-        RecInterview entity = recInterviewMapper.selectById(id);
-        if (entity == null) {
-            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "面试记录不存在");
-        }
-        entity.setResult("offer");
-        entity.setOfferSalary(dto.getOfferSalary());
-        if (StringUtils.hasText(dto.getOfferDate())) {
-            entity.setOfferDate(LocalDate.parse(dto.getOfferDate()));
-        }
-        entity.setOfferRemark(dto.getRemark());
-        recInterviewMapper.updateById(entity);
+        try {
+            RecInterview entity = recInterviewMapper.selectById(id);
+            if (entity == null) {
+                throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "面试记录不存在");
+            }
+            entity.setResult("offer");
+            entity.setOfferSalary(dto.getOfferSalary());
+            if (StringUtils.hasText(dto.getOfferDate())) {
+                try {
+                    entity.setOfferDate(LocalDate.parse(dto.getOfferDate()));
+                } catch (Exception e) {
+                    throw new BusinessException(ResultCode.BAD_REQUEST.getCode(), "入职日期格式错误，请使用 yyyy-MM-dd 格式");
+                }
+            }
+            entity.setOfferRemark(dto.getRemark());
+            recInterviewMapper.updateById(entity);
 
-        // 同步更新简历状态
-        RecResume resume = recResumeMapper.selectById(entity.getResumeId());
-        if (resume != null) {
-            resume.setStatus("offer");
-            recResumeMapper.updateById(resume);
+            // 同步更新简历状态
+            RecResume resume = recResumeMapper.selectById(entity.getResumeId());
+            if (resume != null) {
+                resume.setStatus("offer");
+                recResumeMapper.updateById(resume);
+            }
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("发放Offer异常, interviewId={}", id, e);
+            throw new BusinessException(500, "发放Offer失败: " + e.getMessage());
         }
     }
 
@@ -237,7 +248,63 @@ public class RecInterviewServiceImpl implements RecInterviewService {
         if (resume != null) {
             resume.setStatus("hired");
             recResumeMapper.updateById(resume);
+
+            // 自动创建员工花名册记录
+            try {
+                // 检查是否已存在（防止重复入职）
+                Long existCount = hrEmployeeMapper.selectCount(
+                        new LambdaQueryWrapper<HrEmployee>()
+                                .eq(HrEmployee::getName, resume.getName())
+                                .eq(HrEmployee::getPhone, resume.getPhone()));
+                if (existCount == 0) {
+                    HrEmployee emp = new HrEmployee();
+                    emp.setEmpNo(generateEmpNo());
+                    emp.setName(resume.getName());
+                    emp.setPhone(resume.getPhone());
+                    emp.setEmail(resume.getEmail());
+                    emp.setGender(resume.getGender());
+                    emp.setEntryDate(entity.getOfferDate() != null
+                            ? entity.getOfferDate() : LocalDate.now());
+                    emp.setStatus(1); // 在职
+                    // 尝试从简历中解析 baseSalary
+                    if (entity.getOfferSalary() != null && !entity.getOfferSalary().isBlank()) {
+                        try {
+                            emp.setBaseSalary(new BigDecimal(entity.getOfferSalary().replace(",", "")));
+                        } catch (Exception ignore) {}
+                    }
+                    hrEmployeeMapper.insert(emp);
+                    log.info("入职员工创建成功: empNo={}, name={}", emp.getEmpNo(), emp.getName());
+                } else {
+                    log.info("员工已存在，跳过创建: name={}, phone={}", resume.getName(), resume.getPhone());
+                }
+            } catch (Exception e) {
+                log.error("创建员工记录失败: interviewId={}, name={}", id, resume.getName(), e);
+                // 不阻断入职流程，只记录日志
+            }
         }
+    }
+
+    /**
+     * 自动生成工号：查找最大EMP编号，递增
+     */
+    private String generateEmpNo() {
+        LambdaQueryWrapper<HrEmployee> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(HrEmployee::getEmpNo)
+                .likeRight(HrEmployee::getEmpNo, "EMP")
+                .orderByDesc(HrEmployee::getEmpNo)
+                .last("LIMIT 1");
+        HrEmployee last = hrEmployeeMapper.selectOne(wrapper);
+        if (last != null && last.getEmpNo() != null && last.getEmpNo().length() > 3) {
+            try {
+                String numPart = last.getEmpNo().substring(3);
+                int nextNum = Integer.parseInt(numPart) + 1;
+                return String.format("EMP%04d", nextNum);
+            } catch (NumberFormatException e) {
+                // fallback: 基于最大ID
+            }
+        }
+        // 默认起始编号
+        return "EMP0001";
     }
 
     private InterviewVO toVO(RecInterview entity, RecResume resume, String interviewerName) {

@@ -8,6 +8,15 @@ export default defineConfig({
             '@': resolve(__dirname, 'src')
         }
     },
+    server: {
+        port: 5173,
+        proxy: {
+            '/api': {
+                target: 'http://localhost:8080',
+                changeOrigin: true
+            }
+        }
+    },
     build: {
         outDir: '../hr-backend/hr-server/src/main/resources/static',
         emptyOutDir: true,

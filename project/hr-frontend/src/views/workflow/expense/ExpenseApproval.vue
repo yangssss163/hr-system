@@ -2,35 +2,34 @@
   <div class="expense-approval">
     <el-card>
       <div class="toolbar">
-        <el-button type="primary" @click="handleAdd">新建报销</el-button>
+        <el-button v-permission="'workflow:expense:create'" type="primary" @click="handleAdd">新建报销</el-button>
       </div>
       <el-table :data="tableData" v-loading="loading">
         <el-table-column prop="id" label="ID" width="60" />
-        <el-table-column prop="employeeName" label="申请人" width="100" />
-        <el-table-column prop="deptName" label="部门" width="120" />
+        <el-table-column prop="applicantName" label="申请人" width="100" />
         <el-table-column prop="amount" label="金额" width="100">
-          <template #default="{ row }">¥{{ row.amount.toLocaleString() }}</template>
+          <template #default="{ row }">¥{{ row.amount?.toLocaleString?.() ?? '-' }}</template>
         </el-table-column>
-        <el-table-column prop="type" label="类型" width="100">
+        <el-table-column prop="category" label="类型" width="100">
           <template #default="{ row }">
-            <el-tag :type="typeMap[row.type]?.type || 'info'">{{ typeMap[row.type]?.label || row.type }}</el-tag>
+            <el-tag :type="categoryMap[row.category]?.type || 'info'">{{ categoryMap[row.category]?.label || row.category }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="description" label="说明" width="200" show-overflow-tooltip />
-        <el-table-column prop="applyDate" label="申请日期" width="120" />
+        <el-table-column prop="expenseDate" label="费用日期" width="120" />
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="statusMap[row.status]?.type || 'info'">{{ statusMap[row.status]?.label || row.status }}</el-tag>
+            <el-tag :type="statusMap[row.status]?.type || 'info'">{{ row.statusName || statusMap[row.status]?.label || row.status }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="approveComment" label="审批意见" width="150" show-overflow-tooltip />
+        <el-table-column prop="approverName" label="审批人" width="100" />
         <el-table-column prop="createTime" label="创建时间" width="180" />
         <el-table-column label="操作" width="250">
           <template #default="{ row }">
-            <el-button size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
-            <el-button v-if="row.status === 'pending'" size="small" type="success" @click="handleApprove(row, true)">同意</el-button>
-            <el-button v-if="row.status === 'pending'" size="small" type="danger" @click="handleApprove(row, false)">拒绝</el-button>
+            <el-button v-permission="'workflow:expense:update'" size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-permission="'workflow:expense:delete'" size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button v-permission="'workflow:expense:approve'" v-if="row.status === 'pending'" size="small" type="success" @click="handleApprove(row, true)">同意</el-button>
+            <el-button v-permission="'workflow:expense:approve'" v-if="row.status === 'pending'" size="small" type="danger" @click="handleApprove(row, false)">拒绝</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -39,9 +38,9 @@
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑报销' : '新建报销'" width="500px">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
         <el-form-item label="金额" prop="amount"><el-input-number v-model="form.amount" :min="0" :precision="2" style="width:100%" /></el-form-item>
-        <el-form-item label="类型" prop="type"><el-select v-model="form.type"><el-option label="差旅费" value="travel" /><el-option label="业务招待费" value="entertainment" /><el-option label="办公用品费" value="office" /><el-option label="其他" value="other" /></el-select></el-form-item>
+        <el-form-item label="费用类型" prop="category"><el-select v-model="form.category"><el-option label="差旅费" value="travel" /><el-option label="业务招待费" value="entertainment" /><el-option label="办公用品费" value="office" /><el-option label="其他" value="other" /></el-select></el-form-item>
         <el-form-item label="说明" prop="description"><el-input v-model="form.description" type="textarea" :rows="3" /></el-form-item>
-        <el-form-item label="申请日期" prop="applyDate"><el-date-picker v-model="form.applyDate" type="date" style="width:100%" /></el-form-item>
+        <el-form-item label="费用日期" prop="expenseDate"><el-date-picker v-model="form.expenseDate" type="date" value-format="YYYY-MM-DD" style="width:100%" /></el-form-item>
       </el-form>
       <template #footer><el-button @click="dialogVisible=false">取消</el-button><el-button type="primary" @click="handleSubmit">确定</el-button></template>
     </el-dialog>
@@ -57,9 +56,11 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useUserStore } from '@/stores/user'
 import { expenseApprovalApi } from '@/api/modules/workflow'
 import type { ExpenseApproval, ExpenseApprovalForm, ApprovalRequest } from '@/api/types'
 
+const userStore = useUserStore()
 const tableData = ref<ExpenseApproval[]>([])
 const loading = ref(false)
 const dialogVisible = ref(false)
@@ -69,9 +70,8 @@ const approveFormRef = ref()
 const isEdit = ref(false)
 const editId = ref(0)
 const approveId = ref(0)
-const approveType = ref(true)
 
-const typeMap: Record<string, { label: string; type: string }> = {
+const categoryMap: Record<string, { label: string; type: string }> = {
   travel: { label: '差旅费', type: 'info' },
   entertainment: { label: '业务招待费', type: 'warning' },
   office: { label: '办公用品费', type: 'success' },
@@ -85,9 +85,9 @@ const statusMap: Record<string, { label: string; type: string }> = {
 }
 
 const pagination = reactive({ page: 1, pageSize: 10, total: 0 })
-const form = reactive<ExpenseApprovalForm>({ amount: 0, type: '', description: '', applyDate: '' })
-const approveForm = reactive<ApprovalRequest>({ approve: true, comment: '' })
-const rules = { amount: [{ required: true, message: '请输入金额', trigger: 'blur' }], type: [{ required: true, message: '请选择类型', trigger: 'change' }], description: [{ required: true, message: '请输入说明', trigger: 'blur' }], applyDate: [{ required: true, message: '请选择申请日期', trigger: 'change' }] }
+const form = reactive<ExpenseApprovalForm>({ applicantId: 0, amount: 0, category: '', description: '', expenseDate: '' })
+const approveForm = reactive<ApprovalRequest>({ result: 'approved', comment: '' })
+const rules = { amount: [{ required: true, message: '请输入金额', trigger: 'blur' }], category: [{ required: true, message: '请选择费用类型', trigger: 'change' }], description: [{ required: true, message: '请输入说明', trigger: 'blur' }], expenseDate: [{ required: true, message: '请选择费用日期', trigger: 'change' }] }
 
 const loadData = async () => {
   loading.value = true
@@ -98,14 +98,13 @@ const loadData = async () => {
   } finally { loading.value = false }
 }
 
-const handleAdd = () => { isEdit.value = false; editId.value = 0; Object.assign(form, { amount: 0, type: '', description: '', applyDate: '' }); dialogVisible.value = true }
-const handleEdit = (row: ExpenseApproval) => { isEdit.value = true; editId.value = row.id; Object.assign(form, row); dialogVisible.value = true }
+const handleAdd = () => { isEdit.value = false; editId.value = 0; Object.assign(form, { applicantId: userStore.userInfo?.userId || 0, amount: 0, category: '', description: '', expenseDate: '' }); dialogVisible.value = true }
+const handleEdit = (row: ExpenseApproval) => { isEdit.value = true; editId.value = row.id; Object.assign(form, { applicantId: row.applicantId, amount: row.amount, category: row.category, description: row.description, expenseDate: row.expenseDate }); dialogVisible.value = true }
 const handleDelete = async (row: ExpenseApproval) => { await ElMessageBox.confirm('确定删除？'); await expenseApprovalApi.delete(row.id); ElMessage.success('删除成功'); loadData() }
 
 const handleApprove = (row: ExpenseApproval, approve: boolean) => {
   approveId.value = row.id
-  approveType.value = approve
-  Object.assign(approveForm, { approve, comment: '' })
+  Object.assign(approveForm, { result: approve ? 'approved' : 'rejected', comment: '' })
   approveDialogVisible.value = true
 }
 
@@ -117,13 +116,14 @@ const submitApprove = async () => {
 const handleSubmit = async () => {
   await formRef.value?.validate(async (valid: boolean) => {
     if (!valid) return
+    if (!isEdit.value) form.applicantId = userStore.userInfo?.userId || 0
     if (isEdit.value) await expenseApprovalApi.update(editId.value, form)
     else await expenseApprovalApi.create(form)
     ElMessage.success('操作成功'); dialogVisible.value = false; loadData()
   })
 }
 
-onMounted(() => loadData())
+onMounted(() => { loadData() })
 </script>
 
 <style lang="scss" scoped>

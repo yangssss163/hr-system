@@ -1,0 +1,1 @@
+import{h as e}from"./index-DqxX81Zi.js";const u=s=>e.get("/users",{params:s}),n=s=>e.post("/users",s),o=(s,r)=>e.put(`/users/${s}`,r),a=s=>e.delete(`/users/${s}`),c=(s,r)=>e.put(`/users/${s}/roles`,r);export{c as a,n as c,a as d,u as g,o as u};

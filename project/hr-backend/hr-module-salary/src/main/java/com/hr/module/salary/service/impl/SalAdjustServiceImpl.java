@@ -3,6 +3,8 @@ package com.hr.module.salary.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.hr.common.enums.ResultCode;
+import com.hr.common.exception.BusinessException;
 import com.hr.module.salary.dto.SalAdjustDTO;
 import com.hr.module.salary.dto.SalAdjustQuery;
 import com.hr.module.salary.dto.SalAdjustVO;
@@ -31,6 +33,15 @@ public class SalAdjustServiceImpl implements SalAdjustService {
         Page<SalAdjust> page = new Page<>(query.getPage(), query.getPageSize());
         IPage<SalAdjust> result = salAdjustMapper.selectPage(page, wrapper);
         return result.convert(this::toVO);
+    }
+
+    @Override
+    public SalAdjustVO getById(Long id) {
+        SalAdjust adjust = salAdjustMapper.selectById(id);
+        if (adjust == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND.getCode(), "调薪记录不存在");
+        }
+        return toVO(adjust);
     }
 
     @Override

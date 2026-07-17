@@ -7,8 +7,12 @@ import com.hr.module.crm.dto.CrmOpportunityDTO;
 import com.hr.module.crm.dto.CrmOpportunityQuery;
 import com.hr.module.crm.dto.CrmOpportunityVO;
 import com.hr.module.crm.entity.CrmOpportunity;
+import com.hr.module.crm.entity.CrmCustomer;
 import com.hr.module.crm.mapper.CrmOpportunityMapper;
+import com.hr.module.crm.mapper.CrmCustomerMapper;
 import com.hr.module.crm.service.CrmOpportunityService;
+import com.hr.module.employee.entity.HrEmployee;
+import com.hr.module.employee.mapper.HrEmployeeMapper;
 import com.hr.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +25,8 @@ import java.time.LocalDate;
 public class CrmOpportunityServiceImpl implements CrmOpportunityService {
 
     private final CrmOpportunityMapper crmOpportunityMapper;
+    private final CrmCustomerMapper crmCustomerMapper;
+    private final HrEmployeeMapper hrEmployeeMapper;
 
     @Override
     public IPage<CrmOpportunityVO> page(CrmOpportunityQuery query) {
@@ -109,6 +115,14 @@ public class CrmOpportunityServiceImpl implements CrmOpportunityService {
         vo.setContactPhone(entity.getContactPhone());
         vo.setRemark(entity.getRemark());
         vo.setCreateTime(entity.getCreateTime());
+        if (entity.getCustomerId() != null) {
+            CrmCustomer customer = crmCustomerMapper.selectById(entity.getCustomerId());
+            if (customer != null) vo.setCustomerName(customer.getName());
+        }
+        if (entity.getOwnerId() != null) {
+            HrEmployee emp = hrEmployeeMapper.selectById(entity.getOwnerId());
+            if (emp != null) vo.setOwnerName(emp.getName());
+        }
         return vo;
     }
 }

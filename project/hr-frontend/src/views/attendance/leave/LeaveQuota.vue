@@ -21,7 +21,7 @@
           <template #default="{ row }"><el-tag :type="row.remainDays > 0 ? 'success' : 'warning'">{{ row.remainDays }}</el-tag></template>
         </el-table-column>
         <el-table-column label="操作" width="100">
-          <template #default="{ row }"><el-button size="small" @click="handleAdjust(row)">调整额度</el-button></template>
+          <template #default="{ row }"><el-button v-permission="'attendance:leave-quota:update'" size="small" @click="handleAdjust(row)">调整额度</el-button></template>
         </el-table-column>
       </el-table>
     </el-card>

@@ -6,7 +6,6 @@ import lombok.Data;
 
 @Data
 public class FlowApproveDTO {
-    @NotNull(message = "审批不能为空")
     private Long id;
     @NotBlank(message = "审批结果不能为空")
     private String result;

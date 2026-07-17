@@ -23,7 +23,7 @@
 
     <el-card>
       <div class="toolbar">
-        <el-button type="primary" @click="handleAdd"><el-icon><Plus /></el-icon>新增异动</el-button>
+        <el-button v-permission="'employee:create'" type="primary" @click="handleAdd"><el-icon><Plus /></el-icon>新增异动</el-button>
       </div>
       <el-table :data="tableData" border stripe>
         <el-table-column prop="empNo" label="工号" width="120" />
@@ -41,7 +41,7 @@
         <el-table-column prop="createTime" label="创建时间" width="180" />
         <el-table-column label="操作" width="150">
           <template #default="{ row }">
-            <el-button size="small" v-if="row.status === 1" @click="handleRevoke(row)">撤销</el-button>
+            <el-button v-permission="'employee:update'" size="small" v-if="row.status === 1" @click="handleRevoke(row)">撤销</el-button>
             <el-button size="small" @click="handleView(row)">查看</el-button>
           </template>
         </el-table-column>

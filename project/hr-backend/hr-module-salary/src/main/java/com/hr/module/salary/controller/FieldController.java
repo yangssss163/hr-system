@@ -22,14 +22,21 @@ public class FieldController {
     private final SalFieldService salFieldService;
 
     @Operation(summary = "字段列表")
-    @GetMapping("/")
+    @GetMapping
     @PreAuthorize("hasAuthority('salary:field:list')")
     public Result<List<SalFieldVO>> list() {
         return Result.success(salFieldService.list());
     }
 
+    @Operation(summary = "字段详情")
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('salary:field:list')")
+    public Result<SalFieldVO> detail(@PathVariable Long id) {
+        return Result.success(salFieldService.getById(id));
+    }
+
     @Operation(summary = "创建字段")
-    @PostMapping("/")
+    @PostMapping
     @PreAuthorize("hasAuthority('salary:field:create')")
     public Result<Void> create(@Valid @RequestBody SalFieldDTO dto) {
         salFieldService.create(dto);

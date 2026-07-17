@@ -10,6 +10,8 @@ import com.hr.module.office.dto.SysMessageVO;
 import com.hr.module.office.entity.SysMessage;
 import com.hr.module.office.mapper.SysMessageMapper;
 import com.hr.module.office.service.SysMessageService;
+import com.hr.module.system.entity.SysUser;
+import com.hr.module.system.mapper.SysUserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -19,6 +21,7 @@ import org.springframework.util.StringUtils;
 public class SysMessageServiceImpl implements SysMessageService {
 
     private final SysMessageMapper sysMessageMapper;
+    private final SysUserMapper sysUserMapper;
 
     @Override
     public IPage<SysMessageVO> page(SysMessageQuery query) {
@@ -29,8 +32,14 @@ public class SysMessageServiceImpl implements SysMessageService {
         if (query.getIsRead() != null) {
             wrapper.eq(SysMessage::getIsRead, query.getIsRead());
         }
+        if (query.getUserId() != null) {
+            wrapper.and(w -> w.eq(SysMessage::getSenderId, query.getUserId()).or().eq(SysMessage::getReceiverId, query.getUserId()));
+        }
         if (query.getReceiverId() != null) {
             wrapper.eq(SysMessage::getReceiverId, query.getReceiverId());
+        }
+        if (query.getSenderId() != null) {
+            wrapper.eq(SysMessage::getSenderId, query.getSenderId());
         }
         wrapper.orderByDesc(SysMessage::getCreateTime);
         Page<SysMessage> page = new Page<>(query.getPage(), query.getPageSize());
@@ -83,7 +92,15 @@ public class SysMessageServiceImpl implements SysMessageService {
         SysMessageVO vo = new SysMessageVO();
         vo.setId(entity.getId());
         vo.setSenderId(entity.getSenderId());
+        if (entity.getSenderId() != null) {
+            SysUser sender = sysUserMapper.selectById(entity.getSenderId());
+            if (sender != null) vo.setSenderName(sender.getRealName());
+        }
         vo.setReceiverId(entity.getReceiverId());
+        if (entity.getReceiverId() != null) {
+            SysUser receiver = sysUserMapper.selectById(entity.getReceiverId());
+            if (receiver != null) vo.setReceiverName(receiver.getRealName());
+        }
         vo.setTitle(entity.getTitle());
         vo.setContent(entity.getContent());
         vo.setIsRead(entity.getIsRead());

@@ -1,0 +1,1 @@
+import{h as o}from"./index-DqxX81Zi.js";const e=t=>o.get("/positions",{params:t}),n=t=>o.post("/positions",t),r=(t,s)=>o.put(`/positions/${t}`,s),p=t=>o.delete(`/positions/${t}`);export{n as c,p as d,e as g,r as u};

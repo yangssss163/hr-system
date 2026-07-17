@@ -1,6 +1,7 @@
 package com.hr.module.auth.service;
 
 import com.hr.module.auth.dto.LoginDTO;
+import com.hr.module.auth.dto.RegisterDTO;
 
 import java.util.Map;
 
@@ -10,6 +11,11 @@ public interface AuthService {
      * 用户登录
      */
     Map<String, Object> login(LoginDTO dto);
+
+    /**
+     * 用户注册
+     */
+    void register(RegisterDTO dto);
 
     /**
      * 用户登出

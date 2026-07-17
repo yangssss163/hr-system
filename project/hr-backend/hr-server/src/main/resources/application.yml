@@ -30,6 +30,9 @@ cors:
   allowed-origins: "*"
 
 spring:
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
   profiles:
     active: dev
   datasource:
@@ -73,6 +76,12 @@ minio:
   access-key: minioadmin
   secret-key: minioadmin123
   bucket: hr-files
+
+# ============================================
+# 前后端部署模式 — 开发时设为 false，用 Vite 代理；部署时设为 true，后端一体化提供前端
+# ============================================
+app:
+  serve-spa: false
 
 knife4j:
   enable: true

@@ -23,4 +23,5 @@ public class SalSheet extends BaseEntity {
     private BigDecimal totalDeduction;
     private BigDecimal netSalary;
     private Integer status;
+    private String fieldValues;
 }

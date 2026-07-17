@@ -2,7 +2,7 @@
   <div class="field-manage">
     <el-card>
       <div class="toolbar">
-        <el-button type="primary" @click="handleAdd">创建字段</el-button>
+        <el-button v-permission="'salary:field:create'" type="primary" @click="handleAdd">创建字段</el-button>
       </div>
       <el-table :data="tableData" v-loading="loading">
         <el-table-column prop="id" label="ID" width="60" />
@@ -18,8 +18,8 @@
         </el-table-column>
         <el-table-column label="操作" width="150">
           <template #default="{ row }">
-            <el-button size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button v-permission="'salary:field:edit'" size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-permission="'salary:field:delete'" size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -66,7 +66,7 @@ const loadData = async () => {
 }
 
 const handleAdd = () => { isEdit.value = false; editId.value = 0; Object.assign(form, { name: '', code: '', type: 'income', formula: '', sort: 0, status: 1 }); dialogVisible.value = true }
-const handleEdit = (row: SalaryField) => { isEdit.value = true; editId.value = row.id; Object.assign(form, row); dialogVisible.value = true }
+const handleEdit = (row: SalaryField) => { isEdit.value = true; editId.value = row.id; Object.assign(form, { name: row.name, code: row.code, type: row.type, formula: row.formula, sort: row.sort, status: row.status }); dialogVisible.value = true }
 const handleDelete = async (row: SalaryField) => { await ElMessageBox.confirm('确定删除？'); await salaryFieldApi.delete(row.id); ElMessage.success('删除成功'); loadData() }
 
 const handleSubmit = async () => {
