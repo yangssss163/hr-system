@@ -1,1 +1,0 @@
-import{h as t}from"./index-DqxX81Zi.js";const o=e=>t.get("/roles",{params:e}),l=()=>t.get("/roles/all"),n=e=>t.get(`/roles/${e}`),a=e=>t.post("/roles",e),u=(e,s)=>t.put(`/roles/${e}`,s),c=e=>t.delete(`/roles/${e}`),g=(e,s)=>t.put(`/roles/${e}/menus`,s);export{o as a,g as b,a as c,c as d,n as e,l as g,u};

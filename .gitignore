@@ -21,3 +21,6 @@ Thumbs.db
 # Env
 .env
 .env.local
+
+# Frontend build output
+project/hr-backend/hr-server/src/main/resources/static/

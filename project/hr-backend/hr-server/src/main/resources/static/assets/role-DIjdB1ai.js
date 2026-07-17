@@ -1,1 +1,0 @@
-import{h as t}from"./index-0MpjF_Vx.js";const o=e=>t.get("/roles",{params:e}),l=()=>t.get("/roles/all"),n=e=>t.post("/roles",e),a=(e,s)=>t.put(`/roles/${e}`,s),u=e=>t.delete(`/roles/${e}`),c=(e,s)=>t.put(`/roles/${e}/menus`,s);export{o as a,c as b,n as c,u as d,l as g,a as u};
