@@ -98,7 +98,7 @@ INSERT IGNORE INTO sys_menu (id, parent_id, name, type, path, component, permiss
 (190, 179, '出差审批', 2, '/workflow/travel', 'workflow/travel/TravelManage', 'workflow:travel:list', 'Place', 3, 1),
 (191, 190, '发起出差', 3, '', '', 'workflow:travel:create', '', 1, 1),
 (192, 190, '编辑出差', 3, '', '', 'workflow:travel:update', '', 2, 1),
-(193, 190, '删支出差', 3, '', '', 'workflow:travel:delete', '', 3, 1),
+(193, 190, '删除出差', 3, '', '', 'workflow:travel:delete', '', 3, 1),
 (194, 190, '审批出差', 3, '', '', 'workflow:travel:approve', '', 4, 1),
 (195, 179, '请假审批', 2, '/workflow/leave', 'workflow/leave/LeaveManage', 'workflow:leave:list', 'Sunny', 4, 1),
 (196, 195, '发起请假', 3, '', '', 'workflow:leave:create', '', 1, 1),

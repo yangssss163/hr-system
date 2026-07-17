@@ -11,7 +11,7 @@ INSERT IGNORE INTO sal_rule (type, value, unit, remark) VALUES
 
 -- 如果有后台代码改为使用 tax_rate，也兼容保留原 tax 类型映射
 INSERT INTO sys_menu (id, parent_id, name, type, path, component, permission, icon, sort, visible) VALUES
-(134, 133, '编辑工资单', 3, '', '', 'salary:sheet:edit', '', 5, 1)
+(201, 133, '编辑工资单', 3, '', '', 'salary:sheet:edit', '', 5, 1)
 ON DUPLICATE KEY UPDATE permission = 'salary:sheet:edit';
 
-INSERT INTO sys_role_menu (role_id, menu_id) VALUES (1, 134) ON DUPLICATE KEY UPDATE role_id = 1;
+INSERT INTO sys_role_menu (role_id, menu_id) VALUES (1, 201) ON DUPLICATE KEY UPDATE role_id = 1;
