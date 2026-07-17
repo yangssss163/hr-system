@@ -20,8 +20,8 @@
         <el-table-column prop="createTime" label="创建时间" width="180" />
         <el-table-column label="操作" width="280">
           <template #default="{ row }">
-            <el-button v-permission="'system:role:update'" size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button v-permission="'system:role:update'" size="small" type="warning" @click="handlePerm(row)">权限</el-button>
+            <el-button v-permission="'system:role:edit'" size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-permission="'system:role:assign-menu'" size="small" type="warning" @click="handlePerm(row)">权限</el-button>
             <el-button v-permission="'system:role:delete'" size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>

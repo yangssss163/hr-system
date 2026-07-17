@@ -164,8 +164,8 @@ const handleSubmit = async () => {
   try {
     await formRef.value?.validate()
     const data = { ...form }
-    if (data.expectedCloseDate instanceof Date) {
-      data.expectedCloseDate = data.expectedCloseDate.toISOString().slice(0, 10)
+    if ((data.expectedCloseDate as any) instanceof Date) {
+      data.expectedCloseDate = (data.expectedCloseDate as any as Date).toISOString().slice(0, 10)
     }
     if (isEdit.value) await opportunityApi.update(editId.value, data as OpportunityForm)
     else await opportunityApi.create(data as OpportunityForm)

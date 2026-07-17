@@ -165,8 +165,8 @@ const handleSubmit = async () => {
   try {
     await formRef.value?.validate()
     const data = { ...form }
-    if (data.signDate instanceof Date) {
-      data.signDate = data.signDate.toISOString().slice(0, 10)
+    if ((data.signDate as any) instanceof Date) {
+      data.signDate = (data.signDate as any as Date).toISOString().slice(0, 10)
     }
     if (isEdit.value) await orderApi.update(editId.value, data as OrderForm)
     else await orderApi.create(data as OrderForm)

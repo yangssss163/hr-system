@@ -45,6 +45,21 @@ const loadData = async () => {
 
 const handleReset = () => { const now = new Date(); searchForm.date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`; loadData() }
 
+const handleExport = () => {
+  if (tableData.value.length === 0) return
+  const headers = ['ID', '工号', '姓名', '部门', '应出勤天数', '实际出勤天数', '迟到次数', '请假次数', '加班时长(小时)']
+  const keys = ['employeeId', 'empNo', 'employeeName', 'deptName', 'shouldWorkDays', 'actualWorkDays', 'lateCount', 'leaveCount', 'overtimeHours']
+  const csvContent = [headers.join(',')]
+    .concat(tableData.value.map((row: any) => keys.map(k => row[k] ?? '').join(',')))
+    .join('\n')
+  const BOM = '\uFEFF'
+  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url; link.download = `考勤汇总报表_${searchForm.date}.csv`; link.click()
+  URL.revokeObjectURL(url)
+}
+
 onMounted(() => loadData())
 </script>
 

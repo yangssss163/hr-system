@@ -157,8 +157,8 @@ const handleSubmit = async () => {
   try {
     await formRef.value?.validate()
     const data = { ...form }
-    if (data.refundDate instanceof Date) {
-      data.refundDate = data.refundDate.toISOString().slice(0, 10)
+    if ((data.refundDate as any) instanceof Date) {
+      data.refundDate = (data.refundDate as any as Date).toISOString().slice(0, 10)
     }
     if (isEdit.value) await refundApi.update(editId.value, data as RefundForm)
     else await refundApi.create(data as RefundForm)

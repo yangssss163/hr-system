@@ -162,8 +162,8 @@ const handleSubmit = async () => {
   try {
     await formRef.value?.validate()
     const data = { ...form }
-    if (data.expenseDate instanceof Date) {
-      data.expenseDate = data.expenseDate.toISOString().slice(0, 10)
+    if ((data.expenseDate as any) instanceof Date) {
+      data.expenseDate = (data.expenseDate as any as Date).toISOString().slice(0, 10)
     }
     if (isEdit.value) await expenseApi.update(editId.value, data as CrmExpenseForm)
     else await expenseApi.create(data as CrmExpenseForm)

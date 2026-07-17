@@ -168,8 +168,8 @@ const handleSubmit = async () => {
   try {
     await formRef.value?.validate()
     const data = { ...form }
-    if (data.paymentDate instanceof Date) {
-      data.paymentDate = data.paymentDate.toISOString().slice(0, 10)
+    if ((data.paymentDate as any) instanceof Date) {
+      data.paymentDate = (data.paymentDate as any as Date).toISOString().slice(0, 10)
     }
     if (isEdit.value) await paymentApi.update(editId.value, data as PaymentForm)
     else await paymentApi.create(data as PaymentForm)
