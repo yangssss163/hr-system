@@ -25,7 +25,7 @@
         <el-table-column label="操作" width="200">
           <template #default="{ row }">
             <el-button v-permission="'recruitment:resume:edit'" size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button v-permission="'recruitment:interview:create'" size="small" type="success" @click="openScheduleDialog(row)">安排面试</el-button>
+            <el-button v-if="row.status === 'new'" v-permission="'recruitment:interview:create'" size="small" type="success" @click="openScheduleDialog(row)">安排面试</el-button>
             <el-button v-permission="'recruitment:resume:delete'" size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>

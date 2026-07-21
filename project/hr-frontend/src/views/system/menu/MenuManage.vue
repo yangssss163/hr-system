@@ -18,7 +18,7 @@
             <span>{{ node.label }}</span>
             <span class="node-actions">
               <el-button v-permission="'system:menu:create'" size="small" @click.stop="handleAddChild(data)">添加子菜单</el-button>
-              <el-button v-permission="'system:menu:update'" size="small" @click.stop="handleEdit(data)">编辑</el-button>
+              <el-button v-permission="'system:menu:edit'" size="small" @click.stop="handleEdit(data)">编辑</el-button>
               <el-button v-permission="'system:menu:delete'" size="small" type="danger" @click.stop="handleDelete(data)">删除</el-button>
             </span>
           </span>

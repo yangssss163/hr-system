@@ -69,7 +69,7 @@ export const constantRoutes: RouteRecordRaw[] = [
         meta: { title: '考勤管理', icon: 'Clock' },
         children: [
           { path: 'record', name: 'AttendanceRecord', component: () => import('@/views/attendance/record/AttendanceRecord.vue'), meta: { title: '打卡记录', permission: 'attendance:record:list' } },
-          { path: 'card-rule', name: 'CardRuleSetting', component: () => import('@/views/attendance/rule/CardRuleSetting.vue'), meta: { title: '取卡规则', permission: 'attendance:rule:list' } },
+          { path: 'card-rule', name: 'CardRuleSetting', component: () => import('@/views/attendance/rule/CardRuleSetting.vue'), meta: { title: '取卡规则', permission: 'attendance:card-rule:list' } },
           { path: 'shift', name: 'ShiftSetting', component: () => import('@/views/attendance/shift/ShiftSetting.vue'), meta: { title: '班次设置', permission: 'attendance:shift:list' } },
           { path: 'holiday', name: 'HolidaySetting', component: () => import('@/views/attendance/holiday/HolidaySetting.vue'), meta: { title: '法定假期', permission: 'attendance:holiday:list' } },
           { path: 'leave-quota', name: 'LeaveQuota', component: () => import('@/views/attendance/leave/LeaveQuota.vue'), meta: { title: '假期额度', permission: 'attendance:leave-quota:list' } },
@@ -86,11 +86,11 @@ export const constantRoutes: RouteRecordRaw[] = [
         name: 'Performance',
         meta: { title: '绩效管理', icon: 'TrendCharts' },
         children: [
-          { path: 'level', name: 'LevelSetting', component: () => import('@/views/performance/level/LevelSetting.vue'), meta: { title: '绩效等级', permission: 'performance:level:list' } },
-          { path: 'salary', name: 'SalarySetting', component: () => import('@/views/performance/salary/SalarySetting.vue'), meta: { title: '绩效工资', permission: 'performance:salary:list' } },
-          { path: 'plan', name: 'PlanManage', component: () => import('@/views/performance/plan/PlanManage.vue'), meta: { title: '考核计划', permission: 'performance:plan:list' } },
-          { path: 'record', name: 'ExamRecord', component: () => import('@/views/performance/record/ExamRecord.vue'), meta: { title: '考核记录', permission: 'performance:record:list' } },
-          { path: 'report', name: 'PerfReport', component: () => import('@/views/performance/report/PerfReport.vue'), meta: { title: '绩效报表', permission: 'performance:report:list' } }
+          { path: 'level', name: 'LevelSetting', component: () => import('@/views/performance/level/LevelSetting.vue'), meta: { title: '绩效等级', permission: 'perf:level:list' } },
+          { path: 'salary', name: 'SalarySetting', component: () => import('@/views/performance/salary/SalarySetting.vue'), meta: { title: '绩效工资', permission: 'perf:salary:list' } },
+          { path: 'plan', name: 'PlanManage', component: () => import('@/views/performance/plan/PlanManage.vue'), meta: { title: '考核计划', permission: 'perf:plan:list' } },
+          { path: 'record', name: 'ExamRecord', component: () => import('@/views/performance/record/ExamRecord.vue'), meta: { title: '考核记录', permission: 'perf:record:list' } },
+          { path: 'report', name: 'PerfReport', component: () => import('@/views/performance/report/PerfReport.vue'), meta: { title: '绩效报表', permission: 'perf:report:list' } }
         ]
       },
       {

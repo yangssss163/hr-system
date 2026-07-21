@@ -69,17 +69,17 @@ public class SysMessageServiceImpl implements SysMessageService {
     }
 
     @Override
-    public void update(Long id, SysMessageDTO dto) {
+    public void markRead(Long id) {
         SysMessage entity = sysMessageMapper.selectById(id);
         if (entity == null) {
             throw new BusinessException("消息不存在");
         }
-        entity.setSenderId(dto.getSenderId());
-        entity.setReceiverId(dto.getReceiverId());
-        entity.setTitle(dto.getTitle());
-        entity.setContent(dto.getContent());
-        entity.setIsRead(dto.getIsRead());
-        entity.setSendTime(dto.getSendTime());
+        // 只有收件人才能标记已读
+        Long currentUserId = com.hr.framework.security.SecurityUtils.getCurrentUserId();
+        if (currentUserId == null || !currentUserId.equals(entity.getReceiverId())) {
+            throw new BusinessException("无权操作此消息");
+        }
+        entity.setIsRead(1);
         sysMessageMapper.updateById(entity);
     }
 

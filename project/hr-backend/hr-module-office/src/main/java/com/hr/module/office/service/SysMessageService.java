@@ -9,6 +9,6 @@ public interface SysMessageService {
     IPage<SysMessageVO> page(SysMessageQuery query);
     SysMessageVO getById(Long id);
     void create(SysMessageDTO dto);
-    void update(Long id, SysMessageDTO dto);
+    void markRead(Long id);
     void delete(Long id);
 }

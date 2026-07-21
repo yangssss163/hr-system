@@ -18,7 +18,7 @@
           <span class="custom-tree-node">
             <span>{{ node.label }}</span>
             <span class="node-actions">
-              <el-button v-permission="'system:company:update'" size="small" @click.stop="handleEdit(data)">编辑</el-button>
+              <el-button v-permission="'system:company:edit'" size="small" @click.stop="handleEdit(data)">编辑</el-button>
               <el-button v-permission="'system:company:delete'" size="small" type="danger" @click.stop="handleDelete(data)">删除</el-button>
             </span>
           </span>

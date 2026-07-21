@@ -2,7 +2,7 @@
   <div class="card-rule-setting">
     <el-card>
       <div class="toolbar">
-        <el-button v-permission="'attendance:rule:create'" type="primary" @click="handleAdd">创建规则</el-button>
+        <el-button v-permission="'attendance:card-rule:create'" type="primary" @click="handleAdd">创建规则</el-button>
       </div>
       <el-table :data="tableData" v-loading="loading">
         <el-table-column prop="id" label="ID" width="60" />
@@ -16,8 +16,8 @@
         </el-table-column>
         <el-table-column label="操作" width="150">
           <template #default="{ row }">
-            <el-button v-permission="'attendance:rule:update'" size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button v-permission="'attendance:rule:delete'" size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button v-permission="'attendance:card-rule:edit'" size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-permission="'attendance:card-rule:delete'" size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

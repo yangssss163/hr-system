@@ -87,6 +87,7 @@ const http = {
   get: <T = any>(url: string, config?: RequestConfig) => request<T>('get', url, undefined, config),
   post: <T = any>(url: string, data?: any, config?: RequestConfig) => request<T>('post', url, data, config),
   put: <T = any>(url: string, data?: any, config?: RequestConfig) => request<T>('put', url, data, config),
+  patch: <T = any>(url: string, data?: any, config?: RequestConfig) => request<T>('patch', url, data, config),
   delete: <T = any>(url: string, data?: any, config?: RequestConfig) => request<T>('delete', url, data, config),
   rawGet: (url: string, config?: RequestConfig & { responseType?: 'blob' }) => instance.get(url, {
     params: config?.params,

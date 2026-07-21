@@ -42,11 +42,10 @@ public class MessageController {
         return Result.success();
     }
 
-    @Operation(summary = "编辑")
-    @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('office:message:update')")
-    public Result<Void> update(@PathVariable Long id, @Valid @RequestBody SysMessageDTO dto) {
-        sysMessageService.update(id, dto);
+    @Operation(summary = "标记已读")
+    @PatchMapping("/{id}/read")
+    public Result<Void> markRead(@PathVariable Long id) {
+        sysMessageService.markRead(id);
         return Result.success();
     }
 

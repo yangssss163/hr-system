@@ -2,7 +2,7 @@
   <div class="level-setting">
     <el-card>
       <div class="toolbar">
-        <el-button v-permission="'performance:level:create'" type="primary" @click="handleAdd">添加等级</el-button>
+        <el-button v-permission="'perf:level:create'" type="primary" @click="handleAdd">添加等级</el-button>
       </div>
       <el-table :data="tableData" v-loading="loading">
         <el-table-column prop="id" label="ID" width="60" />
@@ -15,8 +15,8 @@
         <el-table-column prop="sort" label="排序" width="80" />
         <el-table-column label="操作" width="150">
           <template #default="{ row }">
-            <el-button v-permission="'performance:level:update'" size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button v-permission="'performance:level:delete'" size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+            <el-button v-permission="'perf:level:edit'" size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-permission="'perf:level:delete'" size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

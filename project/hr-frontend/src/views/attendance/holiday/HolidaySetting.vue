@@ -14,7 +14,7 @@
         <el-table-column prop="days" label="天数" width="80" />
         <el-table-column label="操作" width="200">
           <template #default="{ row }">
-            <el-button v-permission="'attendance:holiday:update'" size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-permission="'attendance:holiday:edit'" size="small" @click="handleEdit(row)">编辑</el-button>
             <el-button v-permission="'attendance:holiday:create'" size="small" @click="handleCopy(row)">复制</el-button>
             <el-button v-permission="'attendance:holiday:delete'" size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </template>

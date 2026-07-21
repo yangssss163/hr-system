@@ -139,7 +139,7 @@ const handleSend = () => {
 }
 
 const handleMarkRead = async (row: Message) => {
-  await messageApi.update(row.id, { senderId: row.senderId, receiverId: row.receiverId, title: row.title, content: row.content, isRead: 1 } as any)
+  await messageApi.markRead(row.id)
   ElMessage.success('已标记为已读')
   loadData()
 }
@@ -149,7 +149,7 @@ const handleMarkAllRead = async () => {
   if (unread.length === 0) { ElMessage.info('没有未读消息'); return }
   await ElMessageBox.confirm(`确定将 ${unread.length} 条未读消息标记为已读？`)
   for (const row of unread) {
-    await messageApi.update(row.id, { senderId: row.senderId, receiverId: row.receiverId, title: row.title, content: row.content, isRead: 1 } as any)
+    await messageApi.markRead(row.id)
   }
   ElMessage.success('已全部标记为已读')
   loadData()

@@ -16,7 +16,7 @@
         </el-table-column>
         <el-table-column label="操作" width="150">
           <template #default="{ row }">
-            <el-button v-permission="'attendance:shift:update'" size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-permission="'attendance:shift:edit'" size="small" @click="handleEdit(row)">编辑</el-button>
             <el-button v-permission="'attendance:shift:delete'" size="small" type="danger" @click="handleDelete(row)">删除</el-button>
           </template>
         </el-table-column>

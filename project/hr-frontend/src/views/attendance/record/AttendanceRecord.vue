@@ -3,7 +3,7 @@
     <el-card>
       <div class="toolbar">
         <el-button v-permission="'attendance:record:import'" type="primary" @click="handleImport">导入打卡记录</el-button>
-        <el-button v-permission="'attendance:record:update'" @click="handleBatchFix">批量修正</el-button>
+        <el-button v-permission="'attendance:record:fix'" @click="handleBatchFix">批量修正</el-button>
       </div>
       <el-table :data="tableData" v-loading="loading">
         <el-table-column prop="id" label="ID" width="60" />

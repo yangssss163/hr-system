@@ -2,7 +2,7 @@
   <div class="exam-record">
     <el-card>
       <div class="toolbar">
-        <el-button v-permission="'performance:record:create'" type="primary" @click="handleAdd">添加考核</el-button>
+        <el-button v-permission="'perf:record:create'" type="primary" @click="handleAdd">添加考核</el-button>
       </div>
       <el-table :data="tableData" v-loading="loading">
         <el-table-column prop="id" label="ID" width="60" />
@@ -19,7 +19,7 @@
         <el-table-column prop="evaluatorName" label="评分人" width="100" />
         <el-table-column prop="evaluateTime" label="评分时间" width="180" />
         <el-table-column label="操作" width="100">
-          <template #default="{ row }"><el-button v-permission="'performance:record:update'" size="small" @click="handleEdit(row)">编辑</el-button></template>
+          <template #default="{ row }"><el-button v-permission="'perf:record:edit'" size="small" @click="handleEdit(row)">编辑</el-button></template>
         </el-table-column>
       </el-table>
       <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize" :total="pagination.total" layout="total, sizes, prev, pager, next, jumper" />
@@ -40,7 +40,7 @@
               <template #default="{ row }"><el-input-number v-model="row.score" :min="0" :max="100" /></template>
             </el-table-column>
           </el-table>
-          <el-button v-permission="'performance:record:update'" type="primary" size="small" @click="addItem" style="margin-top: 10px">添加考核项</el-button>
+          <el-button v-permission="'perf:record:edit'" type="primary" size="small" @click="addItem" style="margin-top: 10px">添加考核项</el-button>
         </el-form-item>
         <el-form-item label="总分" prop="totalScore"><el-input-number v-model="form.totalScore" :min="0" :max="100" /></el-form-item>
         <el-form-item label="评价"><el-input v-model="form.evaluation" type="textarea" :rows="3" /></el-form-item>

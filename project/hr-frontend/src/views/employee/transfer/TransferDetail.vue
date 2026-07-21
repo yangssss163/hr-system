@@ -41,7 +41,7 @@
         <el-table-column prop="createTime" label="创建时间" width="180" />
         <el-table-column label="操作" width="150">
           <template #default="{ row }">
-            <el-button v-permission="'employee:update'" size="small" v-if="row.status === 1" @click="handleRevoke(row)">撤销</el-button>
+            <el-button v-permission="'employee:transfer:revoke'" size="small" v-if="row.status === 1" @click="handleRevoke(row)">撤销</el-button>
             <el-button size="small" @click="handleView(row)">查看</el-button>
           </template>
         </el-table-column>

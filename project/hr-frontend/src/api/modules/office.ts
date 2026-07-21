@@ -37,6 +37,6 @@ export const messageApi = {
   list: (params: Record<string, any>) => http.get<PageResponse<Message>>('/messages', { params }),
   detail: (id: number) => http.get<Message>(`/messages/${id}`),
   create: (data: MessageForm) => http.post<Message>('/messages', data),
-  update: (id: number, data: MessageForm) => http.put<Message>(`/messages/${id}`, data),
+  markRead: (id: number) => http.patch(`/messages/${id}/read`),
   delete: (id: number) => http.delete(`/messages/${id}`)
 }
