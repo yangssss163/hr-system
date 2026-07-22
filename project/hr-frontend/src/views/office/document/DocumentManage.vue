@@ -31,7 +31,16 @@
         <el-form-item label="文档标题" prop="title"><el-input v-model="form.title" /></el-form-item>
         <el-form-item label="类别" prop="category"><el-select v-model="form.category"><el-option label="制度文档" value="制度文档" /><el-option label="操作手册" value="操作手册" /><el-option label="模板" value="模板" /><el-option label="其他" value="其他" /></el-select></el-form-item>
         <el-form-item label="内容"><el-input v-model="form.content" type="textarea" :rows="4" /></el-form-item>
-        <el-form-item label="文件路径"><el-input v-model="form.fileUrl" placeholder="输入文件URL地址" /></el-form-item>
+        <el-form-item label="文件" prop="fileUrl">
+          <div class="doc-file-upload">
+            <el-upload :auto-upload="false" :limit="1" :file-list="docFileList" :on-change="handleDocFileChange" :on-remove="handleDocFileRemove" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt">
+              <el-button size="small">选择文件</el-button>
+            </el-upload>
+            <span v-if="form.fileUrl && !docFileList.length" class="existing-file">
+              已有文件: {{ form.fileUrl.split('/').pop() }}
+            </span>
+          </div>
+        </el-form-item>
         <el-form-item label="创建人" prop="creatorId">
           <el-select v-model="form.creatorId" filterable placeholder="选择创建人" style="width:100%">
             <el-option v-for="u in userList" :key="u.id" :label="`${u.realName} (${u.deptName || ''})`" :value="u.id" />
@@ -50,6 +59,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { documentApi } from '@/api/modules/office'
 import { userApi, type UserSimple } from '@/api/modules/system'
+import { downloadFile, uploadFile, safeDownloadBlob } from '@/api/common'
 import type { Document, DocumentForm } from '@/api/types'
 
 const tableData = ref<Document[]>([])
@@ -59,6 +69,8 @@ const formRef = ref()
 const isEdit = ref(false)
 const editId = ref(0)
 const userList = ref<UserSimple[]>([])
+const docFileList = ref<any[]>([])
+const pendingDocFile = ref<File | null>(null)
 
 const pagination = reactive({ page: 1, pageSize: 10, total: 0 })
 const defaultForm = (): DocumentForm => ({ title: '', content: '', category: '', parentId: 0, creatorId: undefined, isPublic: 0, fileUrl: '' })
@@ -81,17 +93,52 @@ const loadUsers = async () => {
   } catch { /* silent */ }
 }
 
-const handleAdd = () => { isEdit.value = false; editId.value = 0; Object.assign(form, defaultForm()); dialogVisible.value = true }
-const handleEdit = (row: Document) => { isEdit.value = true; editId.value = row.id; Object.assign(form, { title: row.title, content: row.content, category: row.category, parentId: row.parentId, creatorId: row.creatorId, isPublic: row.isPublic, fileUrl: row.fileUrl }); dialogVisible.value = true }
+const handleAdd = () => { isEdit.value = false; editId.value = 0; Object.assign(form, defaultForm()); docFileList.value = []; pendingDocFile.value = null; dialogVisible.value = true }
+const handleEdit = (row: Document) => { isEdit.value = true; editId.value = row.id; Object.assign(form, { title: row.title, content: row.content, category: row.category, parentId: row.parentId, creatorId: row.creatorId, isPublic: row.isPublic, fileUrl: row.fileUrl }); docFileList.value = []; pendingDocFile.value = null; dialogVisible.value = true }
 const handleDelete = async (row: Document) => { await ElMessageBox.confirm('确定删除？'); await documentApi.delete(row.id); ElMessage.success('删除成功'); loadData() }
-const handleDownload = (row: Document) => { if (row.fileUrl) window.open(row.fileUrl, '_blank') }
+const handleDocFileChange = (file: any) => {
+  pendingDocFile.value = file.raw
+  docFileList.value = [file]
+}
+
+const handleDocFileRemove = () => {
+  pendingDocFile.value = null
+  docFileList.value = []
+}
+
+const handleDownload = async (row: Document) => {
+  if (!row.fileUrl) return
+  // MinIO 存储的文件通过 API 下载
+  if (row.fileUrl.includes('/hr-files/')) {
+    const fileKey = row.fileUrl.split('/hr-files/')[1]
+    try {
+      const res = await downloadFile(fileKey)
+      const blob = res.data as Blob
+      await safeDownloadBlob(blob, fileKey.split('/').pop() || 'download', '文档下载失败')
+    } catch {
+      ElMessage.error('下载失败')
+    }
+  } else {
+    window.open(row.fileUrl, '_blank')
+  }
+}
 
 const handleSubmit = async () => {
   await formRef.value?.validate(async (valid: boolean) => {
     if (!valid) return
-    if (isEdit.value) await documentApi.update(editId.value, form as any)
-    else await documentApi.create(form as any)
-    ElMessage.success('操作成功'); dialogVisible.value = false; loadData()
+    try {
+      if (pendingDocFile.value) {
+        const fd = new FormData()
+        fd.append('file', pendingDocFile.value)
+        fd.append('module', 'document')
+        const uploadRes = await uploadFile(fd)
+        form.fileUrl = uploadRes.fileUrl
+        pendingDocFile.value = null
+      }
+      if (isEdit.value) await documentApi.update(editId.value, form as any)
+      else await documentApi.create(form as any)
+      ElMessage.success('操作成功'); dialogVisible.value = false; loadData()
+    } catch { /* http.ts 已显示错误信息 */ }
   })
 }
 
@@ -100,4 +147,5 @@ onMounted(() => { loadData(); loadUsers() })
 
 <style lang="scss" scoped>
 .document-manage { .toolbar { margin-bottom: 16px; display: flex; gap: 12px; } }
+.doc-file-upload { .existing-file { margin-left: 12px; color: #909399; font-size: 12px; } }
 </style>

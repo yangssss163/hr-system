@@ -2,6 +2,7 @@ package com.hr.module.system.controller;
 
 import com.hr.common.result.PageResult;
 import com.hr.common.result.Result;
+import com.hr.framework.util.MinioUtils;
 import com.hr.module.system.dto.UserDTO;
 import com.hr.module.system.dto.UserQuery;
 import com.hr.module.system.dto.UserRoleDTO;
@@ -13,6 +14,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Map;
 
 @Tag(name = "用户管理")
 @RestController
@@ -21,6 +25,29 @@ import org.springframework.web.bind.annotation.*;
 public class SysUserController {
 
     private final SysUserService sysUserService;
+    private final MinioUtils minioUtils;
+
+    @Operation(summary = "上传头像")
+    @PostMapping("/{id}/avatar")
+    public Result<String> uploadAvatar(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        try {
+            Map<String, Object> uploadResult = minioUtils.upload(file, "avatar");
+            String avatarUrl = (String) uploadResult.get("fileUrl");
+            UserDTO dto = new UserDTO();
+            UserVO user = sysUserService.getById(id);
+            dto.setUsername(user.getUsername());
+            dto.setRealName(user.getRealName());
+            dto.setDeptId(user.getDeptId());
+            dto.setPhone(user.getPhone());
+            dto.setEmail(user.getEmail());
+            dto.setStatus(user.getStatus());
+            dto.setAvatar(avatarUrl);
+            sysUserService.update(id, dto);
+            return Result.success(avatarUrl);
+        } catch (Exception e) {
+            return Result.error("头像上传失败: " + e.getMessage());
+        }
+    }
 
     @Operation(summary = "用户列表（分页）")
     @GetMapping

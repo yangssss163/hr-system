@@ -153,6 +153,7 @@ public class SysUserServiceImpl implements com.hr.module.system.service.SysUserS
         user.setPhone(dto.getPhone());
         user.setEmail(dto.getEmail());
         user.setStatus(dto.getStatus());
+        user.setAvatar(dto.getAvatar());
         sysUserMapper.insert(user);
 
         // 保存角色关联
@@ -187,6 +188,7 @@ public class SysUserServiceImpl implements com.hr.module.system.service.SysUserS
         user.setPhone(dto.getPhone());
         user.setEmail(dto.getEmail());
         user.setStatus(dto.getStatus());
+        user.setAvatar(dto.getAvatar());
         sysUserMapper.updateById(user);
 
         // 更新角色关联

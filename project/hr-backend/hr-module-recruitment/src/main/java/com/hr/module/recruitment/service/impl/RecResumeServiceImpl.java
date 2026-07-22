@@ -128,6 +128,8 @@ public class RecResumeServiceImpl implements RecResumeService {
         entity.setWorkYears(dto.getWorkYears());
         entity.setApplyPosition(dto.getApplyPosition());
         entity.setSource(dto.getSource());
+        entity.setResumeFile(dto.getResumeFile());
+        entity.setResumeContent(dto.getResumeContent());
     }
 
     private ResumeVO toVO(RecResume entity) {
@@ -145,6 +147,7 @@ public class RecResumeServiceImpl implements RecResumeService {
         vo.setSource(entity.getSource());
         vo.setStatus(entity.getStatus());
         vo.setResumeFile(entity.getResumeFile());
+        vo.setResumeContent(entity.getResumeContent());
         vo.setCreateTime(entity.getCreateTime());
         return vo;
     }

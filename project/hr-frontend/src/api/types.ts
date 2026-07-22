@@ -157,6 +157,7 @@ export interface UserForm {
   email?: string
   roleIds?: number[]
   status: number
+  avatar?: string
 }
 
 export interface RoleForm {
@@ -315,6 +316,7 @@ export interface Resume {
   source: string
   status: string
   resumeFile: string
+  resumeContent: string
   createTime: string
 }
 
@@ -330,6 +332,8 @@ export interface ResumeForm {
   applyPosition?: string
   source?: string
   status?: string
+  resumeFile?: string
+  resumeContent?: string
 }
 
 export interface InviteRequest {

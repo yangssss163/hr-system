@@ -22,8 +22,9 @@
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" width="180" />
-        <el-table-column label="操作" width="200">
+        <el-table-column label="操作" width="260">
           <template #default="{ row }">
+            <el-button v-if="row.resumeFile" size="small" @click="handleDownloadResume(row)">下载简历</el-button>
             <el-button v-permission="'recruitment:resume:edit'" size="small" @click="handleEdit(row)">编辑</el-button>
             <el-button v-if="row.status === 'new'" v-permission="'recruitment:interview:create'" size="small" type="success" @click="openScheduleDialog(row)">安排面试</el-button>
             <el-button v-permission="'recruitment:resume:delete'" size="small" type="danger" @click="handleDelete(row)">删除</el-button>
@@ -48,6 +49,13 @@
           </el-select>
         </el-form-item>
         <el-form-item label="应聘职位"><el-input v-model="form.applyPosition" /></el-form-item>
+        <el-form-item label="详细内容"><el-input v-model="form.resumeContent" type="textarea" :rows="4" placeholder="简历详细描述（支持富文本）" /></el-form-item>
+        <el-form-item label="附件上传">
+          <el-upload :auto-upload="false" :limit="1" :on-change="handleResumeFileChange" :file-list="resumeFileList" accept=".pdf,.doc,.docx">
+            <el-button size="small" type="primary">选择文件</el-button>
+            <template #tip><span class="el-upload__tip">支持 PDF、Word 格式</span></template>
+          </el-upload>
+        </el-form-item>
       </el-form>
       <template #footer><el-button @click="dialogVisible=false">取消</el-button><el-button type="primary" @click="handleSubmit">确定</el-button></template>
     </el-dialog>
@@ -122,6 +130,7 @@ import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import { resumeApi, interviewApi, notifyTemplateApi } from '@/api/modules/recruitment'
 import { getUserList } from '@/api/system/user'
+import { uploadFile, downloadFile, safeDownloadBlob } from '@/api/common'
 import type { Resume, ResumeForm, InterviewForm, NotifyTemplate, User } from '@/api/types'
 
 const tableData = ref<Resume[]>([])
@@ -141,7 +150,9 @@ const templateList = ref<NotifyTemplate[]>([])
 const importResult = ref<{ successCount: number; failCount: number; details: { row: number; name: string; phone: string; status: 'success' | 'fail'; message: string }[] } | null>(null)
 
 const pagination = reactive({ page: 1, pageSize: 10, total: 0 })
-const form = reactive<ResumeForm>({ name: '', phone: '', email: '', gender: 1, education: '', school: '', major: '', workYears: 0, applyPosition: '', source: '', status: 'new' })
+const form = reactive<ResumeForm>({ name: '', phone: '', email: '', gender: 1, education: '', school: '', major: '', workYears: 0, applyPosition: '', source: '', status: 'new', resumeContent: '', resumeFile: '' })
+const resumeFileList = ref<any[]>([])
+const pendingResumeFile = ref<File | null>(null)
 const scheduleForm = reactive<InterviewForm & { templateId?: number }>({ resumeId: 0, interviewRound: 1, interviewerId: 0, interviewTime: '', location: '', templateId: undefined })
 
 const rules = { name: [{ required: true, message: '请输入姓名', trigger: 'blur' }], phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }] }
@@ -184,17 +195,54 @@ const loadTemplateList = async () => {
 }
 
 // ---- 简历 CRUD ----
-const handleAdd = () => { isEdit.value = false; editId.value = 0; Object.assign(form, { name: '', phone: '', education: '', applyPosition: '' }); dialogVisible.value = true }
-const handleEdit = (row: Resume) => { isEdit.value = true; editId.value = row.id; Object.assign(form, row); dialogVisible.value = true }
+const handleAdd = () => { isEdit.value = false; editId.value = 0; form.name = ''; form.phone = ''; form.email = ''; form.gender = 1; form.education = ''; form.school = ''; form.major = ''; form.workYears = 0; form.applyPosition = ''; form.source = ''; form.status = 'new'; form.resumeFile = ''; form.resumeContent = ''; resumeFileList.value = []; pendingResumeFile.value = null; dialogVisible.value = true }
+const handleEdit = (row: Resume) => {
+  isEdit.value = true; editId.value = row.id
+  form.name = row.name; form.phone = row.phone
+  form.email = row.email || ''; form.gender = row.gender || 1
+  form.education = row.education || ''; form.school = row.school || ''
+  form.major = row.major || ''; form.workYears = row.workYears || 0
+  form.applyPosition = row.applyPosition || ''; form.source = row.source || ''
+  form.status = row.status || 'new'
+  form.resumeFile = row.resumeFile || ''
+  form.resumeContent = row.resumeContent || ''
+  resumeFileList.value = row.resumeFile ? [{ name: row.resumeFile.split('/').pop() || '已上传文件' }] : []
+  pendingResumeFile.value = null; dialogVisible.value = true
+}
 const handleDelete = async (row: Resume) => { await ElMessageBox.confirm('确定删除？'); await resumeApi.delete(row.id); ElMessage.success('删除成功'); loadData() }
 
 const handleSubmit = async () => {
   await formRef.value?.validate(async (valid: boolean) => {
     if (!valid) return
-    if (isEdit.value) await resumeApi.update(editId.value, form)
-    else await resumeApi.create(form)
-    ElMessage.success('操作成功'); dialogVisible.value = false; loadData()
+    try {
+      if (pendingResumeFile.value) {
+        const fd = new FormData()
+        fd.append('file', pendingResumeFile.value)
+        fd.append('module', 'resume')
+        const uploadRes = await uploadFile(fd)
+        form.resumeFile = uploadRes.fileUrl
+        pendingResumeFile.value = null
+      }
+      if (isEdit.value) await resumeApi.update(editId.value, form)
+      else await resumeApi.create(form)
+      ElMessage.success('操作成功'); dialogVisible.value = false; loadData()
+    } catch { /* http.ts 已显示错误信息 */ }
   })
+}
+
+const handleResumeFileChange = (file: any) => {
+  pendingResumeFile.value = file.raw
+  resumeFileList.value = [file]
+}
+
+const handleDownloadResume = async (row: Resume) => {
+  if (!row.resumeFile) return
+  try {
+    const fileKey = row.resumeFile.includes('/hr-files/') ? row.resumeFile.split('/hr-files/')[1] : row.resumeFile
+    const res = await downloadFile(fileKey)
+    const blob = res.data as Blob
+    await safeDownloadBlob(blob, fileKey.split('/').pop() || 'resume', '简历文件下载失败')
+  } catch { ElMessage.error('下载失败') }
 }
 
 // ---- 安排面试 ----

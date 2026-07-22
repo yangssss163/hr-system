@@ -24,3 +24,7 @@ export const deleteUser = (id: number) => {
 export const assignRoles = (id: number, data: { roleIds: number[] }) => {
   return http.put(`/users/${id}/roles`, data)
 }
+
+export const uploadAvatar = (id: number, formData: FormData) => {
+  return http.rawPost(`/users/${id}/avatar`, formData)
+}

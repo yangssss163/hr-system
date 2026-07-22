@@ -18,5 +18,6 @@ public class ResumeVO {
     private String source;
     private String status;
     private String resumeFile;
+    private String resumeContent;
     private LocalDateTime createTime;
 }

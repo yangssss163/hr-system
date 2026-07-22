@@ -93,6 +93,14 @@
             <el-radio :value="0">禁用</el-radio>
           </el-radio-group>
         </el-form-item>
+        <el-form-item label="头像">
+          <div class="avatar-upload">
+            <el-avatar :size="64" :src="avatarPreview" v-if="avatarPreview" />
+            <el-upload :auto-upload="false" :show-file-list="false" :on-change="handleAvatarChange" accept="image/*">
+              <el-button size="small">{{ avatarPreview ? '更换头像' : '选择头像' }}</el-button>
+            </el-upload>
+          </div>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -125,6 +133,7 @@ import { Plus } from '@element-plus/icons-vue'
 import { getUserList, createUser, updateUser, deleteUser, assignRoles } from '@/api/system/user'
 import { getDeptTree } from '@/api/system/dept'
 import { getAllRoles } from '@/api/system/role'
+import { uploadFile } from '@/api/common'
 import type { User, UserForm, Dept, Role } from '@/api/types'
 
 const tableData = ref<User[]>([])
@@ -137,6 +146,8 @@ const formRef = ref()
 const roleTreeRef = ref()
 const isEdit = ref(false)
 const editId = ref(0)
+const avatarPreview = ref('')
+const pendingAvatarFile = ref<File | null>(null)
 
 const queryForm = reactive({
   keyword: '',
@@ -223,6 +234,8 @@ const handleAdd = () => {
   isEdit.value = false
   editId.value = 0
   Object.assign(form, { username: '', realName: '', password: '', email: '', phone: '', deptId: 0, status: 1 })
+  avatarPreview.value = ''
+  pendingAvatarFile.value = null
   dialogVisible.value = true
 }
 
@@ -230,6 +243,8 @@ const handleEdit = (row: User) => {
   isEdit.value = true
   editId.value = row.id
   Object.assign(form, { username: row.username, realName: row.realName, password: '', email: row.email, phone: row.phone, deptId: row.deptId, status: row.status })
+  avatarPreview.value = row.avatar || ''
+  pendingAvatarFile.value = null
   dialogVisible.value = true
 }
 
@@ -251,6 +266,14 @@ const handleSubmit = async () => {
   await formRef.value.validate(async (valid: boolean) => {
     if (!valid) return
     try {
+      if (pendingAvatarFile.value) {
+        const fd = new FormData()
+        fd.append('file', pendingAvatarFile.value)
+        fd.append('module', 'avatar')
+        const uploadRes = await uploadFile(fd)
+        form.avatar = uploadRes.fileUrl
+        pendingAvatarFile.value = null
+      }
       if (isEdit.value) {
         await updateUser(editId.value, form)
       } else {
@@ -263,6 +286,11 @@ const handleSubmit = async () => {
       // http.ts 已显示错误信息
     }
   })
+}
+
+const handleAvatarChange = (file: any) => {
+  pendingAvatarFile.value = file.raw
+  avatarPreview.value = URL.createObjectURL(file.raw)
 }
 
 const handleSaveRole = async () => {
@@ -295,6 +323,12 @@ onMounted(() => {
     display: flex;
     justify-content: flex-end;
     margin-top: 16px;
+  }
+
+  .avatar-upload {
+    display: flex;
+    align-items: center;
+    gap: 16px;
   }
 }
 </style>

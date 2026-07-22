@@ -201,6 +201,7 @@ import { ElMessage } from 'element-plus'
 import { Plus, Upload, Download, Delete } from '@element-plus/icons-vue'
 import { getEmployeeList, createEmployee, updateEmployee, deleteEmployee, getEmployeeById, batchDeleteEmployees, importEmployees, exportEmployees } from '@/api/modules/employee'
 import { getDeptTree } from '@/api/system/dept'
+import { safeDownloadBlob } from '@/api/common'
 import { getPositionList } from '@/api/system/position'
 import { getCompanyTree } from '@/api/system/company'
 import { useCRUD } from '@/composables/useCRUD'
@@ -460,20 +461,16 @@ const submitImport = () => {
 }
 
 // ---------- 导出 ----------
-const handleExport = () => {
-  exportEmployees({ keyword: queryForm.keyword, deptId: queryForm.deptId, status: queryForm.status }).then((res: any) => {
-    const url = window.URL.createObjectURL(new Blob([res.data]))
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', `员工花名册_${new Date().toISOString().slice(0, 10)}.xlsx`)
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-    ElMessage.success('导出成功')
-  }).catch(() => {
+const handleExport = async () => {
+  try {
+    const res: any = await exportEmployees({ keyword: queryForm.keyword, deptId: queryForm.deptId, status: queryForm.status })
+    const blob = res.data as Blob
+    const fileName = `员工花名册_${new Date().toISOString().slice(0, 10)}.xlsx`
+    const ok = await safeDownloadBlob(blob, fileName, '导出失败')
+    if (ok) ElMessage.success('导出成功')
+  } catch {
     ElMessage.error('导出失败')
-  })
+  }
 }
 
 // ---------- 提交（包装 useCRUD 的 handleSubmit） ----------

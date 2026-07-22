@@ -1,6 +1,7 @@
 package com.hr.module.office.controller;
 
 import com.hr.common.result.Result;
+import com.hr.framework.util.MinioUtils;
 import com.hr.module.office.dto.SysDocumentDTO;
 import com.hr.module.office.dto.SysDocumentQuery;
 import com.hr.module.office.dto.SysDocumentVO;
@@ -11,6 +12,9 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Map;
 
 @Tag(name = "文档管理")
 @RestController
@@ -19,6 +23,31 @@ import org.springframework.web.bind.annotation.*;
 public class DocumentController {
 
     private final SysDocumentService sysDocumentService;
+    private final MinioUtils minioUtils;
+
+    @Operation(summary = "上传文件并创建文档")
+    @PostMapping("/upload")
+    @PreAuthorize("hasAuthority('office:document:create')")
+    public Result<SysDocumentVO> upload(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("title") String title,
+            @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "creatorId", required = false) Long creatorId,
+            @RequestParam(value = "isPublic", required = false, defaultValue = "0") Integer isPublic) {
+        try {
+            Map<String, Object> uploadResult = minioUtils.upload(file, "document");
+            SysDocumentDTO dto = new SysDocumentDTO();
+            dto.setTitle(title);
+            dto.setCategory(category);
+            dto.setCreatorId(creatorId);
+            dto.setIsPublic(isPublic);
+            dto.setFileUrl((String) uploadResult.get("fileUrl"));
+            sysDocumentService.create(dto);
+            return Result.success();
+        } catch (Exception e) {
+            return Result.error("文件上传失败: " + e.getMessage());
+        }
+    }
 
     @Operation(summary = "列表")
     @GetMapping

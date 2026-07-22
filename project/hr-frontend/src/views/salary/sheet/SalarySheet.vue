@@ -51,8 +51,8 @@
         <div class="gen-header">
           <span class="card-title">已生成工资表</span>
           <div class="gen-search">
-            <el-date-picker v-model="genMonth" type="month" value-format="yyyy-MM" placeholder="选择月份" />
-            <el-button type="primary" @click="loadGenData">查询</el-button>
+            <el-date-picker v-model="genMonth" type="month" value-format="YYYY-MM" placeholder="选择月份" />
+            <el-button type="primary" @click="handleGenQuery">查询</el-button>
             <el-button v-permission="'salary:sheet:export'" type="warning" @click="handleExport">
               导出工资表
             </el-button>
@@ -108,7 +108,7 @@
         <el-table-column label="状态" width="90">
           <template #default="{ row }">
             <el-tag v-if="row.status === 1" type="warning">已生成</el-tag>
-            <el-tag v-else-if="row.status === 2" type="success">已导出</el-tag>
+            <el-tag v-else-if="row.status === 2" type="success">已清除</el-tag>
           </template>
         </el-table-column>
       </el-table>
@@ -225,6 +225,7 @@ import { UploadFilled } from '@element-plus/icons-vue'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import { salarySheetApi } from '@/api/modules/salary'
+import { safeDownloadBlob } from '@/api/common'
 import type { SalarySheet } from '@/api/types'
 
 // ===== 当前月份 =====
@@ -271,6 +272,11 @@ const loadGenData = async (withMonth = true) => {
   finally { genLoading.value = false }
 }
 
+const handleGenQuery = () => {
+  genPagination.page = 1
+  loadGenData()
+}
+
 // ===== 编辑草稿 =====
 const saving = ref(false)
 const editVisible = ref(false)
@@ -311,6 +317,7 @@ const handleGenerate = async () => {
     const employeeIds = draftSelectedRows.value.map(r => r.employeeId)
     await salarySheetApi.generate({ month: currentMonth.value, employeeIds })
     ElMessage.success('工资表生成成功')
+    genMonth.value = currentMonth.value
     loadDraftData()
     loadGenData()
   } catch {
@@ -535,27 +542,10 @@ const handleExport = async () => {
   if (genMonth.value) params.month = genMonth.value
   try {
     const res: any = await salarySheetApi.export(params)
-    const blob = res.data
-
-    // 检查 Blob 是否为后端返回的 JSON 错误（而非真正的 Excel 文件）
-    if (blob.type.includes('json')) {
-      const text = await blob.text()
-      try {
-        const err = JSON.parse(text)
-        ElMessage.warning(err.message || '导出失败')
-      } catch { ElMessage.error('导出失败') }
-      return
-    }
-
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', `工资表_${genMonth.value || '全部'}.xlsx`)
-    document.body.appendChild(link); link.click(); document.body.removeChild(link)
-    window.URL.revokeObjectURL(url)
-    ElMessage.success('导出成功')
-    // 导出成功后刷新已生成表格（状态从1变为2）
-    loadGenData()
+    const blob = res.data as Blob
+    const fileName = `工资表_${genMonth.value || '全部'}.xlsx`
+    const ok = await safeDownloadBlob(blob, fileName, '导出失败')
+    if (ok) ElMessage.success('导出成功')
   } catch (err: any) {
     if (err?.response?.status === 404) ElMessage.warning('没有可导出的数据，请先生成工资表')
     else if (err?.response?.status === 403) ElMessage.error('没有导出权限，请联系管理员')

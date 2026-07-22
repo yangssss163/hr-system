@@ -21,4 +21,5 @@ public class RecResume extends BaseEntity {
     private String source;
     private String status;
     private String resumeFile;
+    private String resumeContent;
 }

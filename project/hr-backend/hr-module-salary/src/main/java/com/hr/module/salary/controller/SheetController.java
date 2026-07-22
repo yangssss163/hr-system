@@ -71,7 +71,7 @@ public class SheetController {
         return Result.success(salSheetService.importExcel(file));
     }
 
-    @Operation(summary = "导出工资表（仅导出已生成=1 的记录，导出后标记为已导出=2）")
+    @Operation(summary = "导出工资表（仅导出已生成=1 的记录）")
     @GetMapping("/export")
     @PreAuthorize("hasAuthority('salary:sheet:export')")
     public void export(HttpServletResponse response, SalSheetQuery query) throws Exception {
@@ -107,10 +107,6 @@ public class SheetController {
             response.getWriter().write("{\"code\":404,\"message\":\"没有可导出的已生成数据，请先生成工资表\"}");
             return;
         }
-
-        // 标记为已导出
-        int marked = salSheetService.markExported(month);
-        log.info("标记已导出: month={}, {} 条", month, marked);
 
         ExcelUtils.export(response, "工资表_" + (month != null ? month : "全部"),
                 "工资表", SalSheetExcelVO.class, list);

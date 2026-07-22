@@ -19,13 +19,15 @@
       <el-dropdown trigger="click">
         <span class="user-info">
           <el-avatar :size="32" class="user-avatar">
-            <el-icon><User /></el-icon>
+            <img v-if="userStore.userInfo?.avatar" :src="userStore.userInfo.avatar" />
+            <el-icon v-else><User /></el-icon>
           </el-avatar>
           <span class="user-name">{{ userStore.userInfo?.realName || '用户' }}</span>
           <el-icon :size="14"><ArrowDown /></el-icon>
         </span>
         <template #dropdown>
           <el-dropdown-item @click="handleChangePassword">修改密码</el-dropdown-item>
+          <el-dropdown-item divided @click="triggerAvatarUpload">上传头像</el-dropdown-item>
           <el-dropdown-item divided @click="userStore.logout">退出登录</el-dropdown-item>
         </template>
       </el-dropdown>
@@ -49,6 +51,9 @@
         <el-button type="primary" @click="submitChangePassword" :loading="submittingPassword">确认修改</el-button>
       </template>
     </el-dialog>
+
+    <!-- 隐藏的头像上传 input -->
+    <input ref="avatarInputRef" type="file" accept="image/*" style="display:none" @change="handleAvatarUpload" />
   </div>
 </template>
 
@@ -59,6 +64,7 @@ import { useAppStore } from '@/stores/app'
 import { Menu, User, ArrowDown } from '@element-plus/icons-vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { changePassword } from '@/api/auth'
+import { uploadAvatar } from '@/api/system/user'
 import HeaderNotice from '@/components/office/HeaderNotice.vue'
 import HeaderMessage from '@/components/office/HeaderMessage.vue'
 import HeaderTask from '@/components/office/HeaderTask.vue'
@@ -124,6 +130,32 @@ const submitChangePassword = async () => {
       submittingPassword.value = false
     }
   })
+}
+
+// ===== 头像上传 =====
+const avatarInputRef = ref<HTMLInputElement>()
+
+const triggerAvatarUpload = () => {
+  avatarInputRef.value?.click()
+}
+
+const handleAvatarUpload = async () => {
+  const file = avatarInputRef.value?.files?.[0]
+  if (!file) return
+  const userId = userStore.userInfo?.id
+  if (!userId) return
+  try {
+    const fd = new FormData()
+    fd.append('file', file)
+    const res = await uploadAvatar(userId, fd)
+    const body = res.data as { code: number; data: string }
+    if (body.code === 200 && body.data) {
+      if (userStore.userInfo) userStore.userInfo.avatar = body.data
+      ElMessage.success('头像已更新')
+    }
+  } catch {
+    ElMessage.error('头像上传失败')
+  }
 }
 </script>
 

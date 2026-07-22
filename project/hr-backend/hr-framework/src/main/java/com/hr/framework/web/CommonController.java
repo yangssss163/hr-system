@@ -4,11 +4,13 @@ import com.hr.common.result.Result;
 import com.hr.framework.util.MinioUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.HandlerMapping;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -38,9 +40,32 @@ public class CommonController {
     }
 
     @Operation(summary = "文件下载")
-    @GetMapping("/download/{fileKey}")
-    public void download(@PathVariable String fileKey, HttpServletResponse response) throws Exception {
-        minioUtils.download(fileKey, response);
+    @GetMapping("/download/**")
+    public void download(HttpServletRequest request, HttpServletResponse response) {
+        // 从请求中提取 fileKey（/api/common/download/ 之后的部分）
+        String path = (String) request.getAttribute(HandlerMapping.PATH_WITHIN_HANDLER_MAPPING_ATTRIBUTE);
+        String bestMatchPattern = (String) request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+        // 去掉匹配模式前缀，得到实际的文件 key
+        String fileKey = path.substring(bestMatchPattern.indexOf("**"));
+        // 如果 fileKey 以 / 开头，去掉首字符 /
+        if (fileKey.startsWith("/")) {
+            fileKey = fileKey.substring(1);
+        }
+        try {
+            minioUtils.download(fileKey, response);
+        } catch (Exception e) {
+            log.error("文件下载异常: fileKey={}", fileKey, e);
+            try {
+                if (!response.isCommitted()) {
+                    response.reset();
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    response.getWriter().write("{\"code\":500,\"message\":\"文件下载失败\",\"data\":null}");
+                }
+            } catch (Exception ignored) {
+                log.error("写入错误响应失败", ignored);
+            }
+        }
     }
 
     @Operation(summary = "获取下拉选项数据")
