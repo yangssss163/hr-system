@@ -2,7 +2,7 @@
   <div class="holiday-setting">
     <el-card>
       <div class="toolbar">
-        <el-select v-model="currentYear" style="width: 120px">
+        <el-select v-model="currentYear" style="width: 120px" @change="loadData">
           <el-option v-for="y in years" :key="y" :label="y + '年'" :value="y" />
         </el-select>
         <el-button v-permission="'attendance:holiday:create'" type="primary" @click="handleAdd">创建假期</el-button>

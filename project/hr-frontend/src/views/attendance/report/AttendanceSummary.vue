@@ -40,6 +40,8 @@ const loadData = async () => {
     if (searchForm.date) params.month = searchForm.date.substring(0, 7)
     const res = await attendanceReportApi.summary(params)
     tableData.value = res.data || []
+  } catch {
+    tableData.value = []
   } finally { loading.value = false }
 }
 

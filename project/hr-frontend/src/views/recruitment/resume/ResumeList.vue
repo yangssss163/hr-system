@@ -124,13 +124,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
 import { resumeApi, interviewApi, notifyTemplateApi } from '@/api/modules/recruitment'
 import { getUserList } from '@/api/system/user'
 import { uploadFile, downloadFile, safeDownloadBlob } from '@/api/common'
+import { useRecruitmentSync } from '@/composables/useRecruitmentSync'
 import type { Resume, ResumeForm, InterviewForm, NotifyTemplate, User } from '@/api/types'
 
 const tableData = ref<Resume[]>([])
@@ -260,6 +261,7 @@ const handleScheduleSubmit = async () => {
     ElMessage.success('面试安排成功')
     scheduleVisible.value = false
     loadData()
+    triggerInterviewRefresh()
   })
 }
 
@@ -333,6 +335,9 @@ const sanitizeString = (value: any): string => {
 }
 
 onMounted(() => { loadData(); loadInterviewerList(); loadTemplateList() })
+
+const { resumeRefreshKey, triggerInterviewRefresh } = useRecruitmentSync()
+watch(resumeRefreshKey, () => { loadData() })
 </script>
 
 <style lang="scss" scoped>

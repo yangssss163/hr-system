@@ -23,7 +23,7 @@
           </template>
         </el-table-column>
       </el-table>
-      <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize" :total="pagination.total" layout="total, sizes, prev, pager, next, jumper" />
+      <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize" :total="pagination.total" layout="total, sizes, prev, pager, next, jumper" @current-change="loadData" @size-change="handleSizeChange" />
     </el-card>
     <el-dialog v-model="importVisible" title="导入OA单据" width="500px">
       <div class="import-area">
@@ -68,8 +68,13 @@ const loadData = async () => {
     const res = await oaFlowApi.list({ page: pagination.page, pageSize: pagination.pageSize })
     tableData.value = res.data.records
     pagination.total = res.data.total
+  } catch {
+    tableData.value = []
+    pagination.total = 0
   } finally { loading.value = false }
 }
+
+const handleSizeChange = () => { pagination.page = 1; loadData() }
 
 const handleImport = () => importVisible.value = true
 const handleCloseImport = () => { importVisible.value = false; uploadRef.value?.clearFiles() }
@@ -80,7 +85,7 @@ const handleFileChange = async (file: any) => {
   ElMessage.success('导入成功')
   importVisible.value = false
   uploadRef.value?.clearFiles()
-  loadData()
+  pagination.page = 1; loadData()
 }
 
 const handleDetail = async (row: OaFlow) => {

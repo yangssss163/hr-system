@@ -59,8 +59,8 @@ const loadData = async () => {
   } finally { loading.value = false }
 }
 
-const handleAdd = () => { isEdit.value = false; editId.value = 0; Object.assign(form, { name: '', code: '', defaultDays: 5, enabled: true }); dialogVisible.value = true }
-const handleEdit = (row: LeaveType) => { isEdit.value = true; editId.value = row.id; Object.assign(form, row); dialogVisible.value = true }
+const handleAdd = () => { isEdit.value = false; editId.value = 0; delete (form as any).id; Object.assign(form, { name: '', code: '', defaultDays: 5, enabled: true }); dialogVisible.value = true }
+const handleEdit = (row: LeaveType) => { isEdit.value = true; editId.value = row.id; Object.assign(form, { name: row.name, code: row.code, defaultDays: row.defaultDays, enabled: row.enabled }); dialogVisible.value = true }
 const handleDelete = async (row: LeaveType) => { await ElMessageBox.confirm('确定删除？'); await leaveTypeApi.delete(row.id); ElMessage.success('删除成功'); loadData() }
 
 const handleSubmit = async () => {

@@ -47,9 +47,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { blacklistApi, resumeApi } from '@/api/modules/recruitment'
+import { useRecruitmentSync } from '@/composables/useRecruitmentSync'
 import type { Blacklist, BlacklistForm, Resume } from '@/api/types'
 
 const tableData = ref<Blacklist[]>([])
@@ -99,6 +100,9 @@ const handleSubmit = async () => {
 }
 
 onMounted(() => { loadData(); loadCandidateList() })
+
+const { blacklistRefreshKey } = useRecruitmentSync()
+watch(blacklistRefreshKey, () => { loadData(); loadCandidateList() })
 </script>
 
 <style lang="scss" scoped>

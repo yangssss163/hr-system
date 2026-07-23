@@ -6,7 +6,7 @@
           <el-option v-for="y in years" :key="y" :label="y + '年'" :value="y" />
         </el-select>
         <el-input v-model="searchForm.keyword" placeholder="搜索员工姓名" style="width: 200px" />
-        <el-button type="primary" @click="loadData">查询</el-button>
+        <el-button type="primary" @click="handleSearch">查询</el-button>
         <el-button @click="handleReset">重置</el-button>
       </div>
       <el-table :data="tableData" v-loading="loading">
@@ -24,6 +24,7 @@
           <template #default="{ row }"><el-button v-permission="'attendance:leave-quota:adjust'" size="small" @click="handleAdjust(row)">调整额度</el-button></template>
         </el-table-column>
       </el-table>
+      <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize" :total="pagination.total" layout="total, sizes, prev, pager, next, jumper" @current-change="loadData" @size-change="handleSizeChange" />
     </el-card>
     <el-dialog v-model="adjustVisible" title="调整假期额度" width="400px">
       <el-form :model="adjustForm" label-width="100px">
@@ -53,20 +54,28 @@ const adjustVisible = ref(false)
 const currentYear = new Date().getFullYear()
 const years = [currentYear - 1, currentYear, currentYear + 1]
 
+const pagination = reactive({ page: 1, pageSize: 10, total: 0 })
 const searchForm = reactive({ year: currentYear, keyword: '' })
 const adjustForm = reactive({ id: 0, employeeName: '', leaveTypeName: '', totalDays: 0, newDays: 0 })
 
 const loadData = async () => {
   loading.value = true
   try {
-    const params: Record<string, any> = { year: searchForm.year }
+    const params: Record<string, any> = { year: searchForm.year, page: pagination.page, pageSize: pagination.pageSize }
     if (searchForm.keyword) params.keyword = searchForm.keyword
     const res = await leaveQuotaApi.list(params)
     tableData.value = res.data.records || []
+    pagination.total = res.data.total
+  } catch {
+    tableData.value = []
+    pagination.total = 0
   } finally { loading.value = false }
 }
 
-const handleReset = () => { searchForm.year = currentYear; searchForm.keyword = ''; loadData() }
+const handleSearch = () => { pagination.page = 1; loadData() }
+const handleSizeChange = () => { pagination.page = 1; loadData() }
+
+const handleReset = () => { searchForm.year = currentYear; searchForm.keyword = ''; handleSearch() }
 
 const handleAdjust = (row: LeaveQuota) => {
   Object.assign(adjustForm, { id: row.id, employeeName: row.employeeName, leaveTypeName: row.leaveTypeName, totalDays: row.totalDays, newDays: row.totalDays })
@@ -77,7 +86,7 @@ const handleAdjustSubmit = async () => {
   await leaveQuotaApi.adjust(adjustForm.id, { totalDays: adjustForm.newDays })
   ElMessage.success('调整成功')
   adjustVisible.value = false
-  loadData()
+  pagination.page = 1; loadData()
 }
 
 onMounted(() => loadData())

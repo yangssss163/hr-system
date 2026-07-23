@@ -35,6 +35,19 @@ public class AttReportServiceImpl implements AttReportService {
         if (query.getEmployeeId() != null) {
             wrapper.eq(AttRecord::getEmployeeId, query.getEmployeeId());
         }
+        if (StringUtils.hasText(query.getKeyword())) {
+            List<HrEmployee> matched = hrEmployeeMapper.selectList(
+                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<HrEmployee>()
+                            .like(HrEmployee::getName, query.getKeyword())
+                            .or().like(HrEmployee::getEmpNo, query.getKeyword())
+                            .select(HrEmployee::getId));
+            List<Long> empIds = matched.stream().map(HrEmployee::getId).collect(Collectors.toList());
+            if (empIds.isEmpty()) {
+                wrapper.eq(AttRecord::getId, -1L);
+            } else {
+                wrapper.in(AttRecord::getEmployeeId, empIds);
+            }
+        }
         if (query.getDeptId() != null) {
             // 根据部门ID过滤：先查询该部门下的所有员工ID
             List<HrEmployee> deptEmps = hrEmployeeMapper.selectList(

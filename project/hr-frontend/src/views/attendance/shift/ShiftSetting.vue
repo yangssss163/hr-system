@@ -63,8 +63,8 @@ const loadData = async () => {
   } finally { loading.value = false }
 }
 
-const handleAdd = () => { isEdit.value = false; editId.value = 0; Object.assign(form, { name: '', startTime: '09:00', endTime: '18:00', lateBuffer: 10, earlyBuffer: 10, status: 1 }); dialogVisible.value = true }
-const handleEdit = (row: Shift) => { isEdit.value = true; editId.value = row.id; Object.assign(form, row); dialogVisible.value = true }
+const handleAdd = () => { isEdit.value = false; editId.value = 0; delete (form as any).id; Object.assign(form, { name: '', startTime: '09:00', endTime: '18:00', lateBuffer: 10, earlyBuffer: 10, status: 1 }); dialogVisible.value = true }
+const handleEdit = (row: Shift) => { isEdit.value = true; editId.value = row.id; Object.assign(form, { name: row.name, startTime: row.startTime, endTime: row.endTime, lateBuffer: row.lateBuffer, earlyBuffer: row.earlyBuffer, status: row.status }); dialogVisible.value = true }
 const handleDelete = async (row: Shift) => { await ElMessageBox.confirm('确定删除？'); await shiftApi.delete(row.id); ElMessage.success('删除成功'); loadData() }
 
 const handleSubmit = async () => {

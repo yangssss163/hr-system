@@ -6,9 +6,8 @@ export interface ApiResponse<T = any> {
 
 export interface PageResponse<T = any> {
   total: number
-  size: number
-  current: number
-  pages: number
+  page: number
+  pageSize: number
   records: T[]
 }
 
@@ -728,6 +727,11 @@ export interface PerfRecordForm {
   totalScore: number
   evaluation: string
   levelId: number
+}
+
+export interface PerfRecordDetail extends PerfRecord {
+  evaluation: string
+  items: { id: number; indicator: string; weight: number; score: number }[]
 }
 
 export interface SalaryRule {

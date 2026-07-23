@@ -26,8 +26,16 @@
     </el-card>
     <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑考核' : '添加考核'" width="600px">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="120px">
-        <el-form-item label="考核计划" prop="planId"><el-select v-model="form.planId"><el-option label="选择计划" :value="0" /></el-select></el-form-item>
-        <el-form-item label="员工" prop="employeeId"><el-select v-model="form.employeeId"><el-option label="选择员工" :value="0" /></el-select></el-form-item>
+        <el-form-item label="考核计划" prop="planId">
+          <el-select v-model="form.planId" placeholder="请选择考核计划" style="width:100%">
+            <el-option v-for="p in planOptions" :key="p.id" :label="p.name" :value="p.id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="员工" prop="employeeId">
+          <el-select v-model="form.employeeId" placeholder="请选择员工" filterable style="width:100%">
+            <el-option v-for="e in employeeOptions" :key="e.id" :label="`${e.realName}(${e.deptName || '-'})`" :value="e.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="考核项">
           <el-table :data="form.items" border>
             <el-table-column prop="indicator" label="指标" width="150">
@@ -44,7 +52,11 @@
         </el-form-item>
         <el-form-item label="总分" prop="totalScore"><el-input-number v-model="form.totalScore" :min="0" :max="100" /></el-form-item>
         <el-form-item label="评价"><el-input v-model="form.evaluation" type="textarea" :rows="3" /></el-form-item>
-        <el-form-item label="绩效等级" prop="levelId"><el-select v-model="form.levelId"><el-option label="选择等级" :value="0" /></el-select></el-form-item>
+        <el-form-item label="绩效等级" prop="levelId">
+          <el-select v-model="form.levelId" placeholder="请选择绩效等级" style="width:100%">
+            <el-option v-for="l in levelOptions" :key="l.id" :label="l.name" :value="l.id" />
+          </el-select>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible=false">取消</el-button>
@@ -57,8 +69,9 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { perfRecordApi } from '@/api/modules/performance'
-import type { PerfRecord, PerfRecordForm } from '@/api/types'
+import { perfRecordApi, perfPlanApi, perfLevelApi } from '@/api/modules/performance'
+import { getUserList } from '@/api/system/user'
+import type { PerfRecord, PerfRecordForm, PerfRecordDetail, PerfPlan, PerfLevel } from '@/api/types'
 
 const tableData = ref<PerfRecord[]>([])
 const loading = ref(false)
@@ -66,6 +79,10 @@ const dialogVisible = ref(false)
 const formRef = ref()
 const isEdit = ref(false)
 const editId = ref(0)
+
+const planOptions = ref<PerfPlan[]>([])
+const employeeOptions = ref<{ id: number; realName: string; deptName: string }[]>([])
+const levelOptions = ref<PerfLevel[]>([])
 
 const pagination = reactive({ page: 1, pageSize: 10, total: 0 })
 const form = reactive<PerfRecordForm>({ planId: 0, employeeId: 0, items: [], totalScore: 0, evaluation: '', levelId: 0 })
@@ -77,6 +94,19 @@ const getScoreTag = (score: number) => score >= 90 ? 'danger' : score >= 80 ? 'w
 
 const addItem = () => form.items.push({ indicator: '', weight: 0, score: 0 })
 
+const loadOptions = async () => {
+  try {
+    const [planRes, userRes, levelRes] = await Promise.all([
+      perfPlanApi.list({ page: 1, pageSize: 999 }),
+      getUserList({ page: 1, pageSize: 999 }),
+      perfLevelApi.list()
+    ])
+    planOptions.value = planRes.data.records || []
+    employeeOptions.value = (userRes.data.records || []).map(u => ({ id: u.id, realName: u.realName, deptName: u.deptName }))
+    levelOptions.value = (levelRes.data || []).sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0))
+  } catch { /* 加载失败时下拉为空 */ }
+}
+
 const loadData = async () => {
   loading.value = true
   try {
@@ -87,7 +117,24 @@ const loadData = async () => {
 }
 
 const handleAdd = () => { isEdit.value = false; editId.value = 0; Object.assign(form, { planId: 0, employeeId: 0, items: [{ indicator: '', weight: 0, score: 0 }], totalScore: 0, evaluation: '', levelId: 0 }); dialogVisible.value = true }
-const handleEdit = (row: PerfRecord) => { isEdit.value = true; editId.value = row.id; Object.assign(form, { planId: row.planId, employeeId: row.employeeId, items: [], totalScore: row.totalScore, evaluation: '', levelId: row.levelId }); dialogVisible.value = true }
+const handleEdit = async (row: PerfRecord) => {
+  isEdit.value = true; editId.value = row.id
+  try {
+    const res = await perfRecordApi.detail(row.id)
+    const detail = res.data
+    Object.assign(form, {
+      planId: detail.planId ?? row.planId,
+      employeeId: detail.employeeId ?? row.employeeId,
+      items: (detail.items && detail.items.length > 0) ? detail.items.map((it) => ({ indicator: it.indicator, weight: it.weight, score: it.score })) : [{ indicator: '', weight: 0, score: 0 }],
+      totalScore: detail.totalScore ?? row.totalScore,
+      evaluation: detail.evaluation ?? '',
+      levelId: detail.levelId ?? row.levelId
+    })
+  } catch {
+    Object.assign(form, { planId: row.planId, employeeId: row.employeeId, items: [], totalScore: row.totalScore, evaluation: '', levelId: row.levelId })
+  }
+  dialogVisible.value = true
+}
 
 const handleSubmit = async () => {
   await formRef.value?.validate(async (valid: boolean) => {
@@ -98,7 +145,7 @@ const handleSubmit = async () => {
   })
 }
 
-onMounted(() => loadData())
+onMounted(() => { loadOptions(); loadData() })
 </script>
 
 <style lang="scss" scoped>

@@ -156,11 +156,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { interviewApi, resumeApi, notifyTemplateApi } from '@/api/modules/recruitment'
 import { getUserList } from '@/api/system/user'
+import { useRecruitmentSync } from '@/composables/useRecruitmentSync'
 import type { Interview, InterviewForm, InterviewEvaluateForm, OfferRequest, Resume, User, NotifyTemplate } from '@/api/types'
+
+const { triggerAllRefresh, interviewRefreshKey } = useRecruitmentSync()
 
 const tableData = ref<Interview[]>([])
 const loading = ref(false)
@@ -303,6 +306,7 @@ const handleSubmit = async () => {
     ElMessage.success('操作成功')
     dialogVisible.value = false
     loadData()
+    triggerAllRefresh()
   })
 }
 
@@ -331,6 +335,7 @@ const handleSubmitEvaluate = async () => {
     ElMessage.success('评价提交成功')
     evaluateVisible.value = false
     loadData()
+    triggerAllRefresh()
   })
 }
 
@@ -340,6 +345,7 @@ const handlePass = async (row: Interview) => {
   await interviewApi.pass(row.id)
   ElMessage.success('已通过')
   loadData()
+  triggerAllRefresh()
 }
 
 // ---- 淘汰 ----
@@ -355,6 +361,7 @@ const handleSubmitEliminate = async () => {
   ElMessage.success('已淘汰')
   eliminateVisible.value = false
   loadData()
+  triggerAllRefresh()
 }
 
 // ---- 发放Offer ----
@@ -375,6 +382,7 @@ const handleSubmitOffer = async () => {
     ElMessage.success('Offer已发放')
     offerVisible.value = false
     loadData()
+    triggerAllRefresh()
   })
 }
 
@@ -384,6 +392,7 @@ const handleConfirmHire = async (row: Interview) => {
   await interviewApi.confirmHire(row.id)
   ElMessage.success('已确认入职')
   loadData()
+  triggerAllRefresh()
 }
 
 onMounted(() => {
@@ -392,6 +401,8 @@ onMounted(() => {
   loadInterviewerList()
   loadTemplateList()
 })
+
+watch(interviewRefreshKey, () => { loadData() })
 </script>
 
 <style lang="scss" scoped>

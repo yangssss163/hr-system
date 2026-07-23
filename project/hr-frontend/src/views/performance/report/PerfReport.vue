@@ -8,9 +8,13 @@
           <el-tab-pane label="职员绩效汇总" name="employee" />
         </el-tabs>
       </div>
+
+      <!-- 绩效明细表 -->
       <template v-if="activeTab === 'detail'">
         <div class="search-bar">
-          <el-select v-model="searchForm.planId" placeholder="考核计划"><el-option label="全部" :value="0" /></el-select>
+          <el-select v-model="detailPlanId" placeholder="考核计划" clearable style="width:200px">
+            <el-option v-for="p in planOptions" :key="p.id" :label="p.name" :value="p.id" />
+          </el-select>
           <el-button type="primary" @click="loadDetail">查询</el-button>
         </div>
         <el-table :data="detailData" v-loading="loading">
@@ -22,8 +26,20 @@
             <template #default="{ row }"><el-tag :type="getLevelTag(row.levelName)">{{ row.levelName }}</el-tag></template>
           </el-table-column>
         </el-table>
+        <el-pagination
+          v-model:current-page="detailPagination.page" v-model:page-size="detailPagination.pageSize"
+          :total="detailPagination.total" layout="total, sizes, prev, pager, next, jumper"
+          @current-change="loadDetail" @size-change="loadDetail"
+        />
       </template>
+
+      <!-- 部门绩效汇总 -->
       <template v-if="activeTab === 'dept'">
+        <div class="search-bar">
+          <el-select v-model="deptPlanId" placeholder="考核计划" clearable style="width:200px">
+            <el-option v-for="p in planOptions" :key="p.id" :label="p.name" :value="p.id" />
+          </el-select>
+        </div>
         <el-row :gutter="20">
           <el-col :span="12">
             <el-table :data="deptData" v-loading="loading">
@@ -38,18 +54,30 @@
           </el-col>
         </el-row>
       </template>
+
+      <!-- 职员绩效汇总 -->
       <template v-if="activeTab === 'employee'">
+        <div class="search-bar">
+          <el-select v-model="employeePlanId" placeholder="考核计划" clearable style="width:200px">
+            <el-option v-for="p in planOptions" :key="p.id" :label="p.name" :value="p.id" />
+          </el-select>
+        </div>
         <el-row :gutter="20">
           <el-col :span="14">
             <el-table :data="employeeData" v-loading="loading">
+              <el-table-column prop="rank" label="排名" width="80" />
               <el-table-column prop="employeeName" label="姓名" width="100" />
               <el-table-column prop="deptName" label="部门" width="120" />
               <el-table-column prop="totalScore" label="总分" width="100" />
               <el-table-column prop="levelName" label="等级" width="100">
                 <template #default="{ row }"><el-tag :type="getLevelTag(row.levelName)">{{ row.levelName }}</el-tag></template>
               </el-table-column>
-              <el-table-column prop="rank" label="排名" width="80" />
             </el-table>
+            <el-pagination
+              v-model:current-page="employeePagination.page" v-model:page-size="employeePagination.pageSize"
+              :total="employeePagination.total" layout="total, sizes, prev, pager, next, jumper"
+              @current-change="loadEmployeeSummary" @size-change="loadEmployeeSummary"
+            />
           </el-col>
           <el-col :span="10">
             <div ref="levelChartRef" class="chart-container"></div>
@@ -61,12 +89,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, watch, nextTick } from 'vue'
+import { ref, reactive, onMounted, nextTick, watch } from 'vue'
 import * as echarts from 'echarts'
-import { perfReportApi } from '@/api/modules/performance'
+import { perfReportApi, perfPlanApi } from '@/api/modules/performance'
+import type { PerfPlan } from '@/api/types'
 
 const activeTab = ref('detail')
 const loading = ref(false)
+
+const planOptions = ref<PerfPlan[]>([])
+const detailPlanId = ref<number | undefined>(undefined)
+const deptPlanId = ref<number | undefined>(undefined)
+const employeePlanId = ref<number | undefined>(undefined)
 
 const detailData = ref<any[]>([])
 const deptData = ref<any[]>([])
@@ -76,12 +110,20 @@ const levelChartRef = ref()
 let deptChart: echarts.ECharts | null = null
 let levelChart: echarts.ECharts | null = null
 
-const searchForm = reactive({ planId: 0 })
+const detailPagination = reactive({ page: 1, pageSize: 10, total: 0 })
+const employeePagination = reactive({ page: 1, pageSize: 10, total: 0 })
 
 const levelTagMap: Record<string, string> = { S: 'danger', A: 'warning', B: 'primary', C: 'info', D: '' }
 const getLevelTag = (name: string) => levelTagMap[name] || ''
 
 const levelColors: Record<string, string> = { S: '#ef4444', A: '#f59e0b', B: '#3b82f6', C: '#10b981', D: '#94a3b8' }
+
+const loadPlans = async () => {
+  try {
+    const res = await perfPlanApi.list({ page: 1, pageSize: 999 })
+    planOptions.value = res.data?.records || []
+  } catch { /* ignore */ }
+}
 
 const renderDeptChart = () => {
   if (!deptChartRef.value || deptData.value.length === 0) return
@@ -131,17 +173,20 @@ const renderLevelChart = () => {
 const loadDetail = async () => {
   loading.value = true
   try {
-    const params: Record<string, any> = {}
-    if (searchForm.planId) params.planId = searchForm.planId
+    const params: Record<string, any> = { page: detailPagination.page, pageSize: detailPagination.pageSize }
+    if (detailPlanId.value) params.planId = detailPlanId.value
     const res = await perfReportApi.detail(params)
     detailData.value = res.data?.records || []
+    detailPagination.total = res.data?.total || 0
   } finally { loading.value = false }
 }
 
 const loadDeptSummary = async () => {
   loading.value = true
   try {
-    deptData.value = (await perfReportApi.deptSummary({})).data || []
+    const params: Record<string, any> = {}
+    if (deptPlanId.value) params.planId = deptPlanId.value
+    deptData.value = (await perfReportApi.deptSummary(params)).data || []
     await nextTick()
     renderDeptChart()
   } finally { loading.value = false }
@@ -150,18 +195,26 @@ const loadDeptSummary = async () => {
 const loadEmployeeSummary = async () => {
   loading.value = true
   try {
-    employeeData.value = (await perfReportApi.employeeSummary({})).data || []
+    const params: Record<string, any> = { page: employeePagination.page, pageSize: employeePagination.pageSize }
+    if (employeePlanId.value) params.planId = employeePlanId.value
+    const res = await perfReportApi.employeeSummary(params)
+    employeeData.value = res.data?.records || []
+    employeePagination.total = res.data?.total || 0
     await nextTick()
     renderLevelChart()
   } finally { loading.value = false }
 }
 
 watch(activeTab, (val) => {
-  if (val === 'dept') { loadDeptSummary() }
-  else if (val === 'employee') { loadEmployeeSummary() }
+  if (val === 'dept') loadDeptSummary()
+  else if (val === 'employee') loadEmployeeSummary()
 })
 
-onMounted(() => loadDetail())
+// 筛选条件变化时重置页码并重新加载
+watch(deptPlanId, () => loadDeptSummary())
+watch(employeePlanId, () => { employeePagination.page = 1; loadEmployeeSummary() })
+
+onMounted(() => { loadPlans(); loadDetail() })
 onMounted(() => window.addEventListener('resize', () => { deptChart?.resize(); levelChart?.resize() }))
 </script>
 

@@ -37,12 +37,20 @@ public class AttExceptionServiceImpl implements AttExceptionService {
     @Override
     public PageResult<AttExceptionVO> page(AttExceptionQuery query) {
         LambdaQueryWrapper<AttRecord> wrapper = new LambdaQueryWrapper<>();
-        wrapper.ne(AttRecord::getStatus, "normal");
-        if (StringUtils.hasText(query.getDateStart())) {
-            wrapper.ge(AttRecord::getRecordDate, LocalDate.parse(query.getDateStart()));
+        if (StringUtils.hasText(query.getType())) {
+            wrapper.eq(AttRecord::getStatus, query.getType());
+        } else {
+            wrapper.ne(AttRecord::getStatus, "normal");
         }
-        if (StringUtils.hasText(query.getDateEnd())) {
-            wrapper.le(AttRecord::getRecordDate, LocalDate.parse(query.getDateEnd()));
+        if (StringUtils.hasText(query.getDate())) {
+            wrapper.eq(AttRecord::getRecordDate, LocalDate.parse(query.getDate()));
+        } else {
+            if (StringUtils.hasText(query.getDateStart())) {
+                wrapper.ge(AttRecord::getRecordDate, LocalDate.parse(query.getDateStart()));
+            }
+            if (StringUtils.hasText(query.getDateEnd())) {
+                wrapper.le(AttRecord::getRecordDate, LocalDate.parse(query.getDateEnd()));
+            }
         }
         wrapper.orderByDesc(AttRecord::getRecordDate);
 

@@ -61,8 +61,8 @@ const loadData = async () => {
   } finally { loading.value = false }
 }
 
-const handleAdd = () => { isEdit.value = false; editId.value = 0; Object.assign(form, { name: '', minCardCount: 2, allowOvertime: true, status: 1 }); dialogVisible.value = true }
-const handleEdit = (row: CardRule) => { isEdit.value = true; editId.value = row.id; Object.assign(form, row); dialogVisible.value = true }
+const handleAdd = () => { isEdit.value = false; editId.value = 0; delete (form as any).id; Object.assign(form, { name: '', minCardCount: 2, allowOvertime: true, status: 1 }); dialogVisible.value = true }
+const handleEdit = (row: CardRule) => { isEdit.value = true; editId.value = row.id; Object.assign(form, { name: row.name, minCardCount: row.minCardCount, allowOvertime: row.allowOvertime, status: row.status }); dialogVisible.value = true }
 const handleDelete = async (row: CardRule) => { await ElMessageBox.confirm('确定删除？'); await cardRuleApi.delete(row.id); ElMessage.success('删除成功'); loadData() }
 
 const handleSubmit = async () => {

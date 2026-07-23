@@ -32,7 +32,7 @@ public class AttendanceReportController {
     @Operation(summary = "汇总表")
     @GetMapping("/summary")
     @PreAuthorize("hasAuthority('attendance:report:summary')")
-    public Result<List<AttReportSummaryVO>> summary(@RequestParam(required = false) String deptId, @RequestParam String month) {
+    public Result<List<AttReportSummaryVO>> summary(@RequestParam(required = false) String deptId, @RequestParam(required = false) String month) {
         return Result.success(attReportService.summary(deptId, month));
     }
 }

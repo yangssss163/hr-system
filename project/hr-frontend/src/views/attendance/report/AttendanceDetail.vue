@@ -3,8 +3,8 @@
     <el-card>
       <div class="toolbar">
         <el-input v-model="searchForm.keyword" placeholder="搜索姓名/工号" style="width: 200px" />
-        <el-date-picker v-model="searchForm.dateRange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" />
-        <el-button type="primary" @click="loadData">查询</el-button>
+        <el-date-picker v-model="searchForm.dateRange" type="daterange" value-format="YYYY-MM-DD" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" />
+        <el-button type="primary" @click="handleSearch">查询</el-button>
         <el-button @click="handleReset">重置</el-button>
       </div>
       <el-table :data="tableData" v-loading="loading">
@@ -19,7 +19,7 @@
           <template #default="{ row }"><el-tag :type="getStatusTag(row.status)">{{ getStatusText(row.status) }}</el-tag></template>
         </el-table-column>
       </el-table>
-      <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize" :total="pagination.total" layout="total, sizes, prev, pager, next, jumper" />
+      <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.pageSize" :total="pagination.total" layout="total, sizes, prev, pager, next, jumper" @current-change="loadData" @size-change="handleSizeChange" />
     </el-card>
   </div>
 </template>
@@ -44,24 +44,29 @@ const statusMap: Record<string, { text: string; tag: string }> = {
 }
 
 const getStatusText = (status: string) => statusMap[status]?.text || status
-const getStatusTag = (status: string) => statusMap[status]?.tag || ''
+const getStatusTag = (status: string) => statusMap[status]?.tag || 'info'
 
 const loadData = async () => {
   loading.value = true
   try {
     const params: Record<string, any> = { page: pagination.page, pageSize: pagination.pageSize }
     if (searchForm.keyword) params.keyword = searchForm.keyword
-    if (searchForm.dateRange.length === 2) {
+    if (searchForm.dateRange?.length === 2) {
       params.dateStart = searchForm.dateRange[0]
       params.dateEnd = searchForm.dateRange[1]
     }
     const res = await attendanceReportApi.detail(params)
     tableData.value = res.data.records
     pagination.total = res.data.total
+  } catch {
+    tableData.value = []
+    pagination.total = 0
   } finally { loading.value = false }
 }
 
-const handleReset = () => { searchForm.keyword = ''; searchForm.dateRange = []; loadData() }
+const handleSearch = () => { pagination.page = 1; loadData() }
+const handleSizeChange = () => { pagination.page = 1; loadData() }
+const handleReset = () => { searchForm.keyword = ''; searchForm.dateRange = []; handleSearch() }
 
 onMounted(() => loadData())
 </script>

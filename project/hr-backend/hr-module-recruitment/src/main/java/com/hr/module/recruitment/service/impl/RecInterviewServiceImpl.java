@@ -159,6 +159,17 @@ public class RecInterviewServiceImpl implements RecInterviewService {
         entity.setEvaluation(dto.getEvaluation());
         if (StringUtils.hasText(dto.getResult())) {
             entity.setResult(dto.getResult());
+
+            // 同步更新简历状态
+            RecResume resume = recResumeMapper.selectById(entity.getResumeId());
+            if (resume != null) {
+                if ("pass".equals(dto.getResult())) {
+                    resume.setStatus("interview");
+                } else if ("fail".equals(dto.getResult())) {
+                    resume.setStatus("eliminated");
+                }
+                recResumeMapper.updateById(resume);
+            }
         }
         recInterviewMapper.updateById(entity);
     }

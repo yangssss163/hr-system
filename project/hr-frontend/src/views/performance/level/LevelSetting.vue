@@ -51,7 +51,12 @@ const isEdit = ref(false)
 const editId = ref(0)
 
 const form = reactive<PerfLevelForm>({ name: '', scoreMin: 0, scoreMax: 100, coefficient: 1, sort: 0 })
-const rules = { name: [{ required: true, message: '请输入等级名称', trigger: 'blur' }] }
+const rules = {
+  name: [{ required: true, message: '请输入等级名称', trigger: 'blur' }],
+  scoreMin: [{ required: true, message: '请输入最低分数', trigger: 'blur' }],
+  scoreMax: [{ required: true, message: '请输入最高分数', trigger: 'blur' }],
+  coefficient: [{ required: true, message: '请输入系数', trigger: 'blur' }]
+}
 
 const levelTagMap: Record<string, string> = { S: 'danger', A: 'warning', B: 'primary', C: 'info', D: '' }
 const getLevelTag = (name: string) => levelTagMap[name] || ''
